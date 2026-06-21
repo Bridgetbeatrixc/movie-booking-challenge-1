@@ -22,7 +22,7 @@ body {
 }
 
 .hero-image {
-  object-position: center center;
+  object-position: center bottom;
 }
 
 .hero-overlay {
@@ -32,48 +32,437 @@ body {
     linear-gradient(180deg, rgba(1, 7, 19, 0.3) 0%, rgba(2, 12, 28, 0.06) 42%, #020c1c 100%);
 }
 
-/* Hero category cards: remove the temporary text symbols and use image icons. */
-.hero-section > .grid > div {
+/* Hero category cards */
+.hero-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hero-shortcut {
   display: flex;
   height: 96px;
   width: 96px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-color: rgba(191, 219, 254, 0.4);
-  background-color: rgba(6, 26, 53, 0.85);
+  border: 1px solid rgba(191, 219, 254, 0.4);
+  border-radius: 12px;
+  background: rgba(6, 26, 53, 0.85);
   padding: 12px;
-  font-size: 0;
-  font-weight: 600;
-  box-shadow: 0 10px 20px rgba(1, 11, 31, 0.45);
-}
-
-.hero-section > .grid > div::before {
-  display: block;
-  height: 40px;
-  width: 40px;
-  content: "";
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-}
-
-.hero-section > .grid > div:nth-child(1)::before {
-  background-image: url("../assets/cinema-icon.png");
-}
-
-.hero-section > .grid > div:nth-child(2)::before {
-  background-image: url("../assets/movie-icon.svg");
-}
-
-.hero-section > .grid > div:nth-child(3)::before {
-  background-image: url("../assets/snack-icon.svg");
-}
-
-.hero-section > .grid > div span {
-  display: block;
-  margin-top: 4px;
+  color: #e0efff;
   font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  box-shadow: 0 10px 20px rgba(1, 11, 31, 0.45);
+  backdrop-filter: blur(8px);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.hero-shortcut:hover,
+.hero-shortcut:focus-visible {
+  transform: translateY(-3px);
+  border-color: rgba(147, 197, 253, 0.8);
+  background: rgba(10, 38, 77, 0.95);
+}
+
+.hero-shortcut img {
+  display: block;
+  height: 34px;
+  width: 40px;
+  object-fit: contain;
+}
+
+.hero-shortcut span {
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .hero-shortcut {
+    height: 82px;
+    width: 82px;
+  }
+}
+
+/* Movie catalogue sections */
+.catalog-section {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.catalog-section-last {
+  padding-bottom: 64px;
+}
+
+.catalog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.catalog-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.catalog-header a {
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.catalog-header a span {
+  margin-left: 6px;
+  font-size: 20px;
+  vertical-align: -1px;
+}
+
+.trailer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.trailer-card {
+  min-width: 0;
+}
+
+.trailer-media {
+  position: relative;
+}
+
+.trailer-media > img {
+  display: block;
+  aspect-ratio: 1.78;
+  width: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.trailer-shade {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(180deg, transparent 42%, rgba(1, 8, 22, 0.72));
+}
+
+.play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  height: 48px;
+  width: 48px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  transform: translate(-50%, -50%);
+}
+
+.play-button svg {
+  height: 27px;
+  width: 27px;
+}
+
+.trailer-label {
+  position: absolute;
+  top: calc(50% + 42px);
+  left: 50%;
+  color: #fff;
+  font-size: 14px;
+  transform: translateX(-50%);
+}
+
+.trailer-copy h3,
+.shelf-card h3 {
+  margin: 14px 0 0;
+  overflow: hidden;
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trailer-copy p,
+.movie-meta {
+  margin: 6px 0 0;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.movie-shelf {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.shelf-card {
+  min-width: 0;
+}
+
+.shelf-card > img,
+.shelf-poster {
+  display: flex;
+  aspect-ratio: 0.7;
+  width: 100%;
+  align-items: flex-end;
+  justify-content: flex-start;
+  overflow: hidden;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.shelf-poster {
+  box-sizing: border-box;
+  padding: 20px;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 0.95;
+}
+
+.poster-space {
+  background:
+    linear-gradient(180deg, transparent 30%, rgba(4, 12, 30, 0.86)),
+    url("https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=900&q=85") center / cover;
+}
+
+.poster-eclipse {
+  background: linear-gradient(160deg, #0e3d72, #071a3a 56%, #24103e);
+}
+
+.poster-quiet {
+  background: linear-gradient(160deg, #365c5d, #10222d 58%, #050b17);
+}
+
+.poster-night {
+  background: linear-gradient(160deg, #3c1e62, #150a2f 62%, #050715);
+}
+
+.poster-ritual {
+  background: linear-gradient(160deg, #641b27, #250710 62%, #070b19);
+}
+
+.movie-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.meta-rating {
+  color: #fbbf24;
+}
+
+.advance-badge {
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+@media (max-width: 700px) {
+  .trailer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .movie-shelf {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 14px;
+  }
+
+  .catalog-header h2 {
+    font-size: 21px;
+  }
+}
+
+/* App download banner */
+.app-promo {
+  max-width: 1280px;
+  margin: 8px auto 0;
+  padding: 0 24px 56px;
+}
+
+.app-promo-inner {
+  display: grid;
+  min-height: 310px;
+  grid-template-columns: minmax(310px, 0.72fr) 1.28fr;
+  align-items: center;
+  gap: 44px;
+  overflow: hidden;
+  border: 1px solid rgba(125, 211, 252, 0.35);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 20% 68%, rgba(39, 105, 255, 0.26), transparent 28%),
+    linear-gradient(115deg, #093e67, #052c4b 55%, #062641);
+  box-shadow: 0 18px 38px rgba(1, 11, 31, 0.38);
+}
+
+.app-promo-visual {
+  position: relative;
+  align-self: stretch;
+  min-height: 310px;
+}
+
+.app-brand-tile {
+  position: absolute;
+  top: 50%;
+  left: 44px;
+  display: grid;
+  width: 166px;
+  height: 126px;
+  place-items: center;
+  border: 1px solid rgba(147, 197, 253, 0.54);
+  border-radius: 8px;
+  background: linear-gradient(145deg, #09527f, #043653);
+  box-shadow: 0 15px 24px rgba(1, 12, 31, 0.35);
+  transform: translateY(-50%);
+}
+
+.app-brand-tile img {
+  width: 136px;
+  height: auto;
+}
+
+.app-phone {
+  position: absolute;
+  right: 2px;
+  bottom: -37px;
+  width: 212px;
+  max-width: 48%;
+  filter: drop-shadow(0 18px 16px rgba(0, 0, 0, 0.42));
+}
+
+.app-promo-copy {
+  padding: 34px 52px 34px 0;
+}
+
+.app-promo-kicker {
+  margin: 0 0 8px;
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.app-promo-copy h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(30px, 3.1vw, 48px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+
+.app-promo-copy > p:not(.app-promo-kicker) {
+  margin: 16px 0 25px;
+  color: #dbeafe;
+  font-size: 18px;
+}
+
+.store-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.store-badge {
+  display: block;
+  width: 208px;
+  height: 64px;
+  border-radius: 10px;
+  background-image: url("../assets/store-badges.png");
+  background-repeat: no-repeat;
+  background-size: 416px 78px;
+  background-position: 0 center;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.google-play {
+  background-position: -208px center;
+}
+
+.store-badge:hover,
+.store-badge:focus-visible {
+  filter: brightness(1.13);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 760px) {
+  .app-promo {
+    padding-bottom: 40px;
+  }
+
+  .app-promo-inner {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .app-promo-visual {
+    min-height: 260px;
+  }
+
+  .app-brand-tile {
+    left: calc(50% - 145px);
+  }
+
+  .app-phone {
+    right: calc(50% - 158px);
+    width: 190px;
+  }
+
+  .app-promo-copy {
+    padding: 12px 28px 34px;
+    text-align: center;
+  }
+
+  .store-links {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-promo {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .app-promo-visual {
+    min-height: 220px;
+  }
+
+  .app-brand-tile {
+    left: 28px;
+    width: 132px;
+    height: 104px;
+  }
+
+  .app-brand-tile img {
+    width: 110px;
+  }
+
+  .app-phone {
+    right: 20px;
+    width: 158px;
+  }
+
+  .store-badge {
+    width: 174px;
+    height: 54px;
+    background-size: 348px 65px;
+  }
+
+  .google-play {
+    background-position: -174px center;
+  }
 }
 
 /* Booking page */

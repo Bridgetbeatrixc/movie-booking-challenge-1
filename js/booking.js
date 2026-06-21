@@ -1,6 +1,17 @@
 // Movie information from the home page.
-var defaultMovie = 'The Conjuring: Last Rites';
+var defaultMovie = 'The Twilight Saga: Breaking Dawn – Part 2';
 var selectedMovie = localStorage.getItem('selectedMovie') || defaultMovie;
+var moviePosters = {
+  'The Twilight Saga: Breaking Dawn – Part 2': 'assets/breaking-dawn-part-2.png',
+  'Another Earth': 'assets/another-earth.png',
+  'Arrival': 'assets/arrival.png',
+  'Annabelle': 'assets/annabelle.png',
+};
+
+if (!moviePosters[selectedMovie]) {
+  selectedMovie = defaultMovie;
+  localStorage.setItem('selectedMovie', defaultMovie);
+}
 
 // Seat settings.
 var ticketPrice = 35000;
@@ -11,6 +22,8 @@ var selectedSeats = [];
 // Page elements.
 var summaryMovie = document.getElementById('summary-movie');
 var heroMovie = document.getElementById('hero-movie-title');
+var moviePoster = document.getElementById('movie-poster');
+var summaryPoster = document.getElementById('summary-poster');
 var seatLayout = document.getElementById('seat-layout');
 var selectedSeatsText = document.getElementById('selected-seats');
 var seatCount = document.getElementById('seat-count');
@@ -24,6 +37,11 @@ resetButton.addEventListener('click', resetBooking);
 function showMovieName() {
   summaryMovie.textContent = selectedMovie;
   heroMovie.textContent = selectedMovie;
+  var poster = moviePosters[selectedMovie] || moviePosters[defaultMovie];
+  moviePoster.src = poster;
+  summaryPoster.src = poster;
+  moviePoster.alt = selectedMovie + ' poster';
+  summaryPoster.alt = selectedMovie + ' poster';
 }
 
 function createSeatLayout() {
@@ -91,7 +109,7 @@ function resetBooking() {
   }
 
   localStorage.removeItem('selectedMovie');
-  selectedMovie = 'No movie selected';
+  selectedMovie = defaultMovie;
   showMovieName();
   updateSummary();
 }
