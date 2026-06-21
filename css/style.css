@@ -1,0 +1,40 @@
+/* Shared styles for both pages */
+body {
+  background: #020c1c;
+}
+
+/* Home page */
+.movie-card {
+  transition: 0.2s ease;
+}
+
+.movie-card:hover {
+  transform: translateY(-5px);
+}
+
+.movie-card.selected {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px #2563eb, 0 16px 28px #071c45;
+}
+
+.poster-art {
+  background: linear-gradient(145deg, #0d3264, #091426 62%, #370f24);
+}
+
+/* Booking page */
+.booking-page {
+  background: radial-gradient(circle at 65% 0%, #102b59, #020c1c 38rem);
+}
+
+.seat.selected {
+  background: #2583ff;
+  border-color: #7fbbff;
+  color: white;
+  box-shadow: 0 0 12px #2583ff;
+}
+
+.seat.occupied {
+  background: #25334a;
+  color: #64748b;
+  cursor: not-allowed;
+}

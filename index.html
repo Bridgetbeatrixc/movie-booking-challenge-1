@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Beatrix Movie | Experience Cinema</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { ink: "#020c1c", navy: "#061a35", electric: "#2b82ff" },
+          },
+        },
+      };
+    </script>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="bg-ink font-sans text-slate-100">
+    <header
+      class="absolute inset-x-0 top-0 z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-6"
+    >
+      <a href="index.html"
+        ><img src="assets/beatrix-logo.png" alt="Beatrix Movie" class="h-9"
+      /></a>
+      <nav class="hidden gap-7 text-sm text-slate-300 md:flex">
+        <a class="text-white" href="index.html">Home</a
+        ><a href="#movies">Movies</a><a href="#coming-soon">Coming soon</a
+        ><a href="#footer">Contact</a>
+      </nav>
+      <a
+        href="#movies"
+        class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900"
+        >Book now</a
+      >
+    </header>
+
+    <main>
+      <section
+        class="relative min-h-[650px] overflow-hidden bg-[#020b1e] px-6 pt-40  text-center"
+      >
+        <img
+          src="assets/cinema-hero.png"
+          alt="Futuristic Beatrix cinema experience"
+          class="absolute inset-0 h-full w-full pr-3 object-cover object-[70%_50%] translate-x-15 -translate-y-20 opacity-100"
+        />
+        <div
+          class="absolute inset-0 bg-gradient-to-b from-[#010713]/60 via-[#020a20]/10 to-[#020c1c]"
+        ></div>
+        <div class="relative mx-auto max-w-2xl">
+          <p class="text-sm font-semibold tracking-[.35em] text-blue-200">
+            BEATRIX MOVIE
+          </p>
+          <h1 class="mt-5 text-4xl font-light sm:text-6xl">
+            Feel The<br /><strong class="font-semibold">Moment Beyond</strong>
+          </h1>
+          <p class="mt-4 text-sm text-slate-200">
+            Your cinematic experience starts here.
+          </p>
+          <a
+            href="#movies"
+            class="mt-7 inline-block rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold shadow-lg shadow-blue-950 hover:bg-blue-500"
+            >Explore movies</a
+          >
+        </div>
+        <div
+          class="absolute bottom-5 left-1/2 grid -translate-x-1/2 grid-cols-3 gap-3 text-xs sm:bottom-10"
+        >
+          <div
+            class="rounded-xl border border-blue-200/30 bg-[#061a35]/90 px-5 py-3 backdrop-blur"
+          >
+            ▣<span class="mt-1 block">Bioskop</span>
+          </div>
+          <div
+            class="rounded-xl border border-blue-200/30 bg-[#061a35]/90 px-5 py-3 backdrop-blur"
+          >
+            ▶<span class="mt-1 block">Film</span>
+          </div>
+          <div
+            class="rounded-xl border border-blue-200/30 bg-[#061a35]/90 px-5 py-3 backdrop-blur"
+          >
+            ▰<span class="mt-1 block">Snacks</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="mx-auto grid max-w-7xl gap-4 px-6 py-10 md:grid-cols-3">
+        <article
+          class="relative min-h-36 overflow-hidden rounded-xl border border-cyan-300/20 bg-gradient-to-r from-cyan-950 to-sky-900 p-5"
+        >
+          <h2 class="text-xl font-semibold">Snack Time</h2>
+          <p class="mt-1 text-sm text-slate-300">
+            Buy 1 BIG Popcorn<br />Free Chicken + Kentang
+          </p>
+          <img
+            src="assets/snack-combo.png"
+            alt="Snack combo"
+            class="absolute bottom-0 right-0 h-32"
+          /><button
+            class="mt-3 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-900"
+          >
+            Learn more
+          </button>
+        </article>
+        <article
+          class="relative min-h-36 overflow-hidden rounded-xl border border-violet-300/20 bg-gradient-to-r from-violet-950 to-violet-700 p-5"
+        >
+          <h2 class="text-xl font-semibold">Movie Premiere</h2>
+          <p class="mt-1 text-sm text-violet-100">
+            Your next big story begins here.
+          </p>
+          <img
+            src="assets/conjuring-poster.png"
+            alt="Horror feature"
+            class="absolute bottom-0 right-5 h-32"
+          /><button
+            class="mt-8 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-900"
+          >
+            Learn more
+          </button>
+        </article>
+        <article
+          class="relative min-h-36 overflow-hidden rounded-xl border border-blue-300/20 bg-gradient-to-r from-blue-900 to-slate-950 p-5"
+        >
+          <h2 class="text-xl font-semibold">Feel It In IMAX</h2>
+          <p class="mt-1 text-sm text-slate-200">
+            Bigger screen. Bigger sound.
+          </p>
+          <img
+            src="assets/imax-theater.png"
+            alt="IMAX theatre"
+            class="absolute bottom-0 right-0 h-36 w-32 object-cover"
+          /><button
+            class="mt-8 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-900"
+          >
+            Learn more
+          </button>
+        </article>
+      </section>
+
+      <section id="movies" class="mx-auto max-w-7xl px-6 pb-12">
+        <div class="mb-6 flex items-end justify-between">
+          <div>
+            <p class="text-sm font-semibold text-blue-300">FEATURED MOVIE</p>
+            <h2 class="mt-1 text-3xl font-semibold">Choose your movie</h2>
+          </div>
+          <span class="text-sm text-slate-400">Pick one to book seats</span>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <button
+            data-movie="The Conjuring: Last Rites"
+            class="movie-card selected overflow-hidden rounded-xl border-2 border-blue-400 bg-navy text-left"
+          >
+            <img
+              src="assets/conjuring-poster.png"
+              alt="The Conjuring: Last Rites"
+              class="h-64 w-full object-cover object-top"
+            />
+            <div class="p-4">
+              <h3 class="font-semibold">The Conjuring: Last Rites</h3>
+              <p class="mt-1 text-sm text-slate-400">Horror · 2h 15m · ★ 8.5</p>
+            </div>
+          </button>
+          <button
+            data-movie="Final Destination: Bloodlines"
+            class="movie-card overflow-hidden rounded-xl border border-slate-700 bg-navy text-left"
+          >
+            <div class="poster-art flex h-64 items-end p-5">
+              <span class="text-2xl font-semibold">FINAL<br />DESTINATION</span>
+            </div>
+            <div class="p-4">
+              <h3 class="font-semibold">Final Destination: Bloodlines</h3>
+              <p class="mt-1 text-sm text-slate-400">Horror · 1h 50m · ★ 7.7</p>
+            </div>
+          </button>
+          <button
+            data-movie="28 Years Later"
+            class="movie-card overflow-hidden rounded-xl border border-slate-700 bg-navy text-left"
+          >
+            <div
+              class="flex h-64 items-end bg-[url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=600&q=85')] bg-cover bg-center p-5"
+            >
+              <span class="text-2xl font-semibold">28 YEARS<br />LATER</span>
+            </div>
+            <div class="p-4">
+              <h3 class="font-semibold">28 Years Later</h3>
+              <p class="mt-1 text-sm text-slate-400">Horror · 1h 55m · ★ 8.1</p>
+            </div>
+          </button>
+          <button
+            data-movie="Eclipse Rising"
+            class="movie-card overflow-hidden rounded-xl border border-slate-700 bg-navy text-left"
+          >
+            <div
+              class="flex h-64 items-end bg-[url('https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=600&q=85')] bg-cover bg-center p-5"
+            >
+              <span class="text-2xl font-semibold">ECLIPSE<br />RISING</span>
+            </div>
+            <div class="p-4">
+              <h3 class="font-semibold">Eclipse Rising</h3>
+              <p class="mt-1 text-sm text-slate-400">Sci-Fi · 2h 18m · ★ 8.7</p>
+            </div>
+          </button>
+        </div>
+        <div
+          id="selection-box"
+          class="mt-7 flex items-center justify-between rounded-xl border border-blue-400/40 bg-blue-950/50 p-4"
+        >
+          <p>
+            Selected movie:
+            <strong id="selected-movie" class="text-blue-200"
+              >The Conjuring: Last Rites</strong
+            >
+          </p>
+          <a
+            href="booking.html"
+            class="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold hover:bg-blue-500"
+            >Choose seats →</a
+          >
+        </div>
+      </section>
+
+      <section id="coming-soon" class="mx-auto max-w-7xl px-6 py-8">
+        <div class="mb-5 flex justify-between">
+          <h2 class="text-xl font-semibold">Coming Soon</h2>
+          <a href="#movies" class="text-sm text-slate-300">See all ›</a>
+        </div>
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div class="overflow-hidden rounded-lg bg-navy">
+            <div class="poster-art h-48 p-4">
+              <span class="text-xl font-bold">THE<br />RITUAL</span>
+            </div>
+            <p class="p-3 font-medium">The Ritual</p>
+            <p class="px-3 pb-3 text-sm text-slate-400">Coming July 2026</p>
+          </div>
+          <div class="overflow-hidden rounded-lg bg-navy">
+            <div
+              class="h-48 bg-[url('https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=500&q=80')] bg-cover"
+            ></div>
+            <p class="p-3 font-medium">The Quiet Road</p>
+            <p class="px-3 pb-3 text-sm text-slate-400">Coming August 2026</p>
+          </div>
+          <div class="overflow-hidden rounded-lg bg-navy">
+            <div class="poster-art h-48 p-4">
+              <span class="text-xl font-bold">NIGHT<br />WATCHERS</span>
+            </div>
+            <p class="p-3 font-medium">Night Watchers</p>
+            <p class="px-3 pb-3 text-sm text-slate-400">Coming soon</p>
+          </div>
+          <div class="overflow-hidden rounded-lg bg-navy">
+            <img
+              src="assets/conjuring-poster.png"
+              alt="New horror movie"
+              class="h-48 w-full object-cover"
+            />
+            <p class="p-3 font-medium">The House Below</p>
+            <p class="px-3 pb-3 text-sm text-slate-400">Coming soon</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="mx-auto max-w-7xl px-6 py-8">
+        <div class="mb-5 flex justify-between">
+          <h2 class="text-xl font-semibold">Showing Now</h2>
+          <a href="#movies" class="text-sm text-slate-300">See all ›</a>
+        </div>
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div class="rounded-lg bg-navy p-3">
+            <img
+              src="assets/conjuring-poster.png"
+              alt="The Conjuring"
+              class="h-52 w-full rounded object-cover"
+            />
+            <p class="mt-3 truncate font-medium">The Conjuring: Last Rites</p>
+            <p class="mt-1 text-sm text-slate-400">
+              2025 &nbsp; ◉ 2.1h &nbsp;
+              <span class="text-amber-400">★ 8.5</span>
+            </p>
+          </div>
+          <div class="rounded-lg bg-navy p-3">
+            <div class="poster-art h-52 rounded p-4">
+              <span class="text-xl font-bold">FINAL<br />DESTINATION</span>
+            </div>
+            <p class="mt-3 truncate font-medium">
+              Final Destination: Bloodlines
+            </p>
+            <p class="mt-1 text-sm text-slate-400">
+              2025 &nbsp; ◉ 1.8h &nbsp;
+              <span class="text-amber-400">★ 7.7</span>
+            </p>
+          </div>
+          <div class="rounded-lg bg-navy p-3">
+            <div
+              class="h-52 rounded bg-[url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=500&q=85')] bg-cover"
+            ></div>
+            <p class="mt-3 truncate font-medium">28 Years Later</p>
+            <p class="mt-1 text-sm text-slate-400">
+              2025 &nbsp; ◉ 1.9h &nbsp;
+              <span class="text-amber-400">★ 8.1</span>
+            </p>
+          </div>
+          <div class="rounded-lg bg-navy p-3">
+            <div
+              class="h-52 rounded bg-[url('https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=500&q=85')] bg-cover"
+            ></div>
+            <p class="mt-3 truncate font-medium">Eclipse Rising</p>
+            <p class="mt-1 text-sm text-slate-400">
+              2025 &nbsp; ◉ 2.3h &nbsp;
+              <span class="text-amber-400">★ 8.7</span>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="mx-auto max-w-7xl px-6 py-8 pb-16">
+        <div class="mb-5 flex justify-between">
+          <h2 class="text-xl font-semibold">Advance Ticket Sales</h2>
+          <a href="#movies" class="text-sm text-slate-300">See all ›</a>
+        </div>
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div
+            class="rounded-lg border border-blue-400/30 bg-gradient-to-b from-blue-950 to-navy p-4"
+          >
+            <p class="text-xs font-semibold text-blue-300">ADVANCE SALE</p>
+            <p class="mt-3 text-xl font-semibold">Eclipse Rising</p>
+            <p class="mt-2 text-sm text-slate-400">Tickets from Rp35.000</p>
+          </div>
+          <div
+            class="rounded-lg border border-blue-400/30 bg-gradient-to-b from-slate-800 to-navy p-4"
+          >
+            <p class="text-xs font-semibold text-blue-300">ADVANCE SALE</p>
+            <p class="mt-3 text-xl font-semibold">The Quiet Road</p>
+            <p class="mt-2 text-sm text-slate-400">Tickets from Rp35.000</p>
+          </div>
+          <div
+            class="rounded-lg border border-blue-400/30 bg-gradient-to-b from-violet-950 to-navy p-4"
+          >
+            <p class="text-xs font-semibold text-blue-300">ADVANCE SALE</p>
+            <p class="mt-3 text-xl font-semibold">Night Watchers</p>
+            <p class="mt-2 text-sm text-slate-400">Tickets from Rp35.000</p>
+          </div>
+          <div
+            class="rounded-lg border border-blue-400/30 bg-gradient-to-b from-amber-950 to-navy p-4"
+          >
+            <p class="text-xs font-semibold text-blue-300">ADVANCE SALE</p>
+            <p class="mt-3 text-xl font-semibold">The Ritual</p>
+            <p class="mt-2 text-sm text-slate-400">Tickets from Rp35.000</p>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer
+      id="footer"
+      class="border-t border-slate-800 bg-[#010816] px-6 py-10 text-center"
+    >
+      <img
+        src="assets/beatrix-logo.png"
+        alt="Beatrix Movie"
+        class="mx-auto h-9"
+      />
+      <p class="mt-5 text-sm text-slate-400">About · FAQ · Contact</p>
+      <p class="mt-4 text-xs text-slate-500">
+        © 2026 Beatrix Movie. All rights reserved.
+      </p>
+    </footer>
+    <script src="js/home.js"></script>
+  </body>
+</html>
