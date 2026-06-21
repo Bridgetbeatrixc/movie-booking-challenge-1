@@ -21,6 +21,61 @@ body {
   background: linear-gradient(145deg, #0d3264, #091426 62%, #370f24);
 }
 
+.hero-image {
+  object-position: center center;
+}
+
+.hero-overlay {
+  background:
+    radial-gradient(circle at 50% 82%, rgba(51, 112, 255, 0.55), transparent 28%),
+    radial-gradient(circle at 50% 88%, rgba(163, 65, 255, 0.22), transparent 46%),
+    linear-gradient(180deg, rgba(1, 7, 19, 0.3) 0%, rgba(2, 12, 28, 0.06) 42%, #020c1c 100%);
+}
+
+/* Hero category cards: remove the temporary text symbols and use image icons. */
+.hero-section > .grid > div {
+  display: flex;
+  height: 96px;
+  width: 96px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-color: rgba(191, 219, 254, 0.4);
+  background-color: rgba(6, 26, 53, 0.85);
+  padding: 12px;
+  font-size: 0;
+  font-weight: 600;
+  box-shadow: 0 10px 20px rgba(1, 11, 31, 0.45);
+}
+
+.hero-section > .grid > div::before {
+  display: block;
+  height: 40px;
+  width: 40px;
+  content: "";
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.hero-section > .grid > div:nth-child(1)::before {
+  background-image: url("../assets/cinema-icon.png");
+}
+
+.hero-section > .grid > div:nth-child(2)::before {
+  background-image: url("../assets/movie-icon.svg");
+}
+
+.hero-section > .grid > div:nth-child(3)::before {
+  background-image: url("../assets/snack-icon.svg");
+}
+
+.hero-section > .grid > div span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
 /* Booking page */
 .booking-page {
   background: radial-gradient(circle at 65% 0%, #102b59, #020c1c 38rem);
