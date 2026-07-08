@@ -379,7 +379,7 @@ body {
   width: 208px;
   height: 64px;
   border-radius: 10px;
-  background-image: url("../assets/store-badges.png");
+  background-image: url("/assets/store-badges.png");
   background-repeat: no-repeat;
   background-size: 416px 78px;
   background-position: 0 center;
