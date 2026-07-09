@@ -1,7 +1,10 @@
 import { Router } from "express";
+import { listShowtimesByMovie } from "../controllers/showtimeController.js";
 import { Movie } from "../models/Movie.js";
 
 const router = Router();
+
+router.get("/:movieId/showtimes", listShowtimesByMovie);
 
 router.get("/", async (req, res, next) => {
   try {

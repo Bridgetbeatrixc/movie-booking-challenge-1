@@ -1,7 +1,10 @@
 import { asset } from "../utils/assets";
 
+export { asset };
+
 export const movies = [
   {
+    key: "breaking-dawn-part-2",
     title: "The Twilight Saga: Breaking Dawn – Part 2",
     shortTitle: "Breaking Dawn – Part 2",
     poster: asset("breaking-dawn-part-2.png"),
@@ -11,6 +14,7 @@ export const movies = [
     year: "2012"
   },
   {
+    key: "another-earth",
     title: "Another Earth",
     shortTitle: "Another Earth",
     poster: asset("another-earth.png"),
@@ -20,6 +24,7 @@ export const movies = [
     year: "2011"
   },
   {
+    key: "arrival",
     title: "Arrival",
     shortTitle: "Arrival",
     poster: asset("arrival.png"),
@@ -29,6 +34,7 @@ export const movies = [
     year: "2016"
   },
   {
+    key: "annabelle",
     title: "Annabelle",
     shortTitle: "Annabelle",
     poster: asset("annabelle.png"),
@@ -57,6 +63,10 @@ export const comingSoonMovies = [
   }
 ];
 
+export const comingSoon = comingSoonMovies;
 export const defaultMovie = movies[0];
-
 export const advanceSaleMovies = [comingSoonMovies[0], movies[0], movies[1], movies[3]];
+
+export function getMovieKey(movie) {
+  return movie?.key || movie?.slug || movie?.id || movie?._id || "";
+}

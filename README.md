@@ -2,8 +2,9 @@
 
 Clean two-folder project structure:
 
-- `frontend/` — React + Vite movie booking UI
-- `backend/` — Express + Mongoose MongoDB API template
+- `frontend/` - React + Vite movie booking UI
+- `backend/` - Express + Mongoose MongoDB API template
+- `SHOWTIME_GUIDE.md` - guide for the Showtime and Seat Selection role
 
 ## Run frontend
 
@@ -22,5 +23,5 @@ npm install
 npm run dev
 ```
 
-Frontend default: `http://localhost:5173`  
+Frontend default: `http://localhost:5173`
 Backend default: `http://localhost:5000`

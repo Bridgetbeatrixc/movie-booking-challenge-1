@@ -4,16 +4,29 @@ import express from "express";
 import { connectDB } from "./config/db.js";
 import bookingRoutes from "./routes/bookings.js";
 import movieRoutes from "./routes/movies.js";
+import showtimeRoutes from "./routes/showtimes.js";
 import { seedMovies } from "./services/seedMovies.js";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
+const allowedOrigins = (
+  process.env.CLIENT_URL || "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
+)
+  .split(",")
+  .map((origin) => origin.trim());
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173"
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Origin is not allowed by CORS."));
+    }
   })
 );
 app.use(express.json());
@@ -23,12 +36,16 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/movies", movieRoutes);
+app.use("/api/showtimes", showtimeRoutes);
 app.use("/api/bookings", bookingRoutes);
 
-app.use((error, req, res, next) => {
+app.use((error, _req, res, _next) => {
   console.error(error);
-  res.status(error.status || 500).json({
-    message: error.message || "Server error"
+  const status = error.status || (error.code === 11000 ? 409 : 500);
+
+  res.status(status).json({
+    message: error.code === 11000 ? "Duplicate showtime schedule." : error.message || "Server error",
+    details: error.details
   });
 });
 

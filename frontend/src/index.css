@@ -477,6 +477,7 @@ body {
   box-shadow: 0 0 12px #2583ff;
 }
 
+.seat.booked,
 .seat.occupied {
   background: #25334a;
   color: #64748b;
@@ -559,6 +560,10 @@ body {
 
 .ticket-qr span.is-active {
   background: #020617;
+}
+
+.showtime-card:disabled {
+  cursor: not-allowed;
 }
 
 .ticket-modal-backdrop {
