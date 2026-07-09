@@ -477,8 +477,13 @@ body {
   box-shadow: 0 0 12px #2583ff;
 }
 
+.seat.booked,
 .seat.occupied {
   background: #25334a;
   color: #64748b;
+  cursor: not-allowed;
+}
+
+.showtime-card:disabled {
   cursor: not-allowed;
 }
