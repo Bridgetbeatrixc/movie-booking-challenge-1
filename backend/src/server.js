@@ -4,6 +4,7 @@ import express from "express";
 import { connectDB } from "./config/db.js";
 import bookingRoutes from "./routes/bookings.js";
 import movieRoutes from "./routes/movies.js";
+import { seedMovies } from "./services/seedMovies.js";
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use((error, req, res, next) => {
 });
 
 connectDB()
+  .then(seedMovies)
   .then(() => {
     app.listen(port, () => {
       console.log(`API listening on http://localhost:${port}`);

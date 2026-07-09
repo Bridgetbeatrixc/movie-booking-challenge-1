@@ -7,6 +7,16 @@ const movieSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
+    shortTitle: {
+      type: String,
+      trim: true
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true
+    },
     poster: {
       type: String,
       required: true

@@ -5,6 +5,15 @@ const bookingSchema = new mongoose.Schema(
     movie: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Movie",
+      required: false
+    },
+    movieTitle: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    moviePoster: {
+      type: String,
       required: true
     },
     cinema: {
@@ -26,6 +35,26 @@ const bookingSchema = new mongoose.Schema(
     totalPrice: {
       type: Number,
       required: true
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "expired", "failed"],
+      default: "pending"
+    },
+    paymentProvider: {
+      type: String,
+      default: "xendit_mock"
+    },
+    payment: {
+      externalId: String,
+      invoiceId: String,
+      invoiceUrl: String,
+      paymentMethod: String,
+      qrString: String,
+      qrExpiresAt: Date,
+      amount: Number,
+      status: String,
+      apiKeyMode: String
     }
   },
   { timestamps: true }

@@ -482,3 +482,62 @@ body {
   color: #64748b;
   cursor: not-allowed;
 }
+
+/* QRIS payment simulation page */
+.payment-page {
+  background:
+    radial-gradient(circle at 16% 12%, rgba(37, 131, 255, 0.22), transparent 26rem),
+    radial-gradient(circle at 82% 18%, rgba(20, 184, 166, 0.16), transparent 22rem),
+    #020c1c;
+}
+
+.payment-hero {
+  background:
+    radial-gradient(circle at 18% 8%, rgba(14, 165, 233, 0.18), transparent 18rem),
+    linear-gradient(145deg, rgba(6, 21, 45, 0.96), rgba(3, 12, 28, 0.98));
+}
+
+.qris-panel {
+  border-radius: 28px;
+  border: 1px solid rgba(147, 197, 253, 0.24);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.74), rgba(2, 6, 23, 0.8));
+  padding: 22px;
+  box-shadow: 0 24px 55px rgba(0, 0, 0, 0.34);
+}
+
+.qris-frame {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  gap: 4px;
+  aspect-ratio: 1;
+  border-radius: 22px;
+  background: #f8fafc;
+  padding: 18px;
+}
+
+.qris-frame span {
+  border-radius: 2px;
+  background: transparent;
+}
+
+.qris-frame span.is-active {
+  background: #020617;
+}
+
+.qris-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 5px solid #f8fafc;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #075985, #083344);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  transform: translate(-50%, -50%);
+}
