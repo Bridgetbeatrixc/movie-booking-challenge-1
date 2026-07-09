@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BookingHero } from "../components/booking/BookingHero";
 import { BookingOptions } from "../components/booking/BookingOptions";
 import { BookingSummary } from "../components/booking/BookingSummary";
@@ -8,16 +8,52 @@ import { Header } from "../components/layout/Header";
 import { ticketPrice } from "../constants/booking";
 import { defaultMovie } from "../data/movies";
 import { saveCheckout } from "../services/checkoutStorage";
-import { checkoutBooking, markBookingPaid } from "../services/api";
+import { checkoutBooking, getOccupiedSeats, markBookingPaid } from "../services/api";
+
+const defaultCinema = "Beatrix Movieplex - Central World";
+const defaultShowtime = "2026-06-21T13:30:00.000Z";
 
 export function BookingPage({ selectedMovie, setSelectedMovie }) {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [checkout, setCheckout] = useState(null);
   const [checkoutError, setCheckoutError] = useState("");
+  const [occupiedSeats, setOccupiedSeats] = useState([]);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const total = selectedSeats.length * ticketPrice;
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadOccupiedSeats() {
+      try {
+        const result = await getOccupiedSeats({
+          movieId: selectedMovie.id || selectedMovie._id || "",
+          cinema: defaultCinema,
+          showtime: defaultShowtime
+        });
+
+        if (active) {
+          setOccupiedSeats(result.occupiedSeats || []);
+        }
+      } catch {
+        if (active) {
+          setOccupiedSeats([]);
+        }
+      }
+    }
+
+    loadOccupiedSeats();
+
+    return () => {
+      active = false;
+    };
+  }, [selectedMovie]);
+
   function toggleSeat(seatName) {
+    if (occupiedSeats.includes(seatName)) {
+      return;
+    }
+
     setSelectedSeats((current) =>
       current.includes(seatName) ? current.filter((seat) => seat !== seatName) : [...current, seatName]
     );
@@ -40,12 +76,13 @@ export function BookingPage({ selectedMovie, setSelectedMovie }) {
         movieId: selectedMovie.id || selectedMovie._id,
         movieTitle: selectedMovie.title,
         moviePoster: selectedMovie.poster,
-        cinema: "Beatrix Movieplex - Central World",
-        showtime: "2026-06-21T13:30:00.000Z",
+        cinema: defaultCinema,
+        showtime: defaultShowtime,
         seats: selectedSeats
       });
 
       setCheckout(result);
+      setOccupiedSeats((current) => [...new Set([...current, ...selectedSeats])]);
       saveCheckout(result);
       window.location.hash = "payment";
     } catch (error) {
@@ -82,7 +119,7 @@ export function BookingPage({ selectedMovie, setSelectedMovie }) {
         <BookingHero movie={selectedMovie} />
         <BookingOptions />
         <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
-          <SeatPicker selectedSeats={selectedSeats} toggleSeat={toggleSeat} />
+          <SeatPicker occupiedSeats={occupiedSeats} selectedSeats={selectedSeats} toggleSeat={toggleSeat} />
           <BookingSummary
             checkout={checkout}
             checkoutError={checkoutError}

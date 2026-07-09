@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { Booking } from "../models/Booking.js";
 import { Movie } from "../models/Movie.js";
+import { createTicketPdf, ensureTicket, sendTicketEmail } from "../services/ticketService.js";
 import { createMockXenditInvoice } from "../services/xenditMock.js";
 
 const router = Router();
@@ -9,6 +10,29 @@ router.get("/", async (req, res, next) => {
   try {
     const bookings = await Booking.find().populate("movie").sort({ createdAt: -1 });
     res.json(bookings);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/occupied", async (req, res, next) => {
+  try {
+    const { movieId, cinema = "Beatrix Movieplex - Central World", showtime = "2026-06-21T13:30:00.000Z" } = req.query;
+    const showtimeDate = new Date(showtime);
+    const query = {
+      cinema,
+      showtime: showtimeDate,
+      paymentStatus: { $in: ["pending", "paid"] }
+    };
+
+    if (movieId) {
+      query.movie = movieId;
+    }
+
+    const bookings = await Booking.find(query).select("seats");
+    const occupiedSeats = [...new Set(bookings.flatMap((booking) => booking.seats))].sort();
+
+    res.json({ occupiedSeats });
   } catch (error) {
     next(error);
   }
@@ -34,13 +58,26 @@ router.post("/checkout", async (req, res, next) => {
     const movie = movieId ? await Movie.findById(movieId) : null;
     const ticketPrice = movie?.price || 35000;
     const totalPrice = seats.length * ticketPrice;
+    const bookingShowtime = showtime ? new Date(showtime) : new Date("2026-06-21T13:30:00.000Z");
+    const bookingCinema = cinema || "Beatrix Movieplex - Central World";
+    const seatConflict = await Booking.findOne({
+      movie: movie?._id,
+      cinema: bookingCinema,
+      showtime: bookingShowtime,
+      paymentStatus: { $in: ["pending", "paid"] },
+      seats: { $in: seats }
+    });
+
+    if (seatConflict) {
+      return res.status(409).json({ message: "One or more selected seats are already booked. Please choose another seat." });
+    }
 
     const booking = await Booking.create({
       movie: movie?._id,
       movieTitle: movie?.title || movieTitle,
       moviePoster: movie?.poster || moviePoster,
-      cinema: cinema || "Beatrix Movieplex - Central World",
-      showtime: showtime ? new Date(showtime) : new Date("2026-06-21T13:30:00.000Z"),
+      cinema: bookingCinema,
+      showtime: bookingShowtime,
       seats,
       totalPrice
     });
@@ -62,20 +99,81 @@ router.post("/checkout", async (req, res, next) => {
 
 router.patch("/:id/mock-paid", async (req, res, next) => {
   try {
-    const booking = await Booking.findByIdAndUpdate(
-      req.params.id,
-      {
-        paymentStatus: "paid",
-        "payment.status": "PAID"
-      },
-      { new: true }
-    ).populate("movie");
+    const booking = await Booking.findById(req.params.id).populate("movie");
 
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }
 
+    booking.paymentStatus = "paid";
+    booking.payment.status = "PAID";
+    await ensureTicket(booking);
+    await booking.save();
+
     res.json(booking);
+  } catch (error) {
+    next(error);
+  }
+});
+
+async function sendTicketEmailHandler(req, res, next) {
+  try {
+    const { email = "guest@example.com" } = req.body;
+    const booking = await Booking.findById(req.params.id).populate("movie");
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (booking.paymentStatus !== "paid") {
+      return res.status(400).json({ message: "Ticket can only be sent after payment." });
+    }
+
+    await ensureTicket(booking);
+    const emailInfo = await sendTicketEmail(booking, email);
+
+    booking.ticket = {
+      ...(booking.ticket.toObject?.() || booking.ticket),
+      emailSent: true,
+      emailTo: email,
+      emailSentAt: new Date()
+    };
+    await booking.save();
+
+    res.json({
+      message: `Ticket email sent to ${email}`,
+      previewUrl: emailInfo.previewUrl,
+      messageId: emailInfo.messageId,
+      booking
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+router.post("/:id/email", sendTicketEmailHandler);
+router.post("/:id/mock-email", sendTicketEmailHandler);
+
+router.get("/:id/ticket.pdf", async (req, res, next) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (booking.paymentStatus !== "paid") {
+      return res.status(400).json({ message: "Ticket PDF is available after payment." });
+    }
+
+    await ensureTicket(booking);
+    booking.ticket.pdfDownloadedAt = new Date();
+    await booking.save();
+
+    const pdf = await createTicketPdf(booking);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="beatrix-ticket-${booking.ticket.ticketCode}.pdf"`);
+    res.send(pdf);
   } catch (error) {
     next(error);
   }

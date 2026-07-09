@@ -55,6 +55,19 @@ const bookingSchema = new mongoose.Schema(
       amount: Number,
       status: String,
       apiKeyMode: String
+    },
+    ticket: {
+      ticketCode: String,
+      qrString: String,
+      qrImageDataUrl: String,
+      issuedAt: Date,
+      emailSent: {
+        type: Boolean,
+        default: false
+      },
+      emailTo: String,
+      emailSentAt: Date,
+      pdfDownloadedAt: Date
     }
   },
   { timestamps: true }

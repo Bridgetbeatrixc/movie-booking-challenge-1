@@ -1,6 +1,6 @@
-import { occupiedSeats, seatRows } from "../../constants/booking";
+import { seatRows } from "../../constants/booking";
 
-export function SeatPicker({ selectedSeats, toggleSeat }) {
+export function SeatPicker({ occupiedSeats = [], selectedSeats, toggleSeat }) {
   return (
     <div className="rounded-2xl border border-slate-700 bg-[#06152d] p-5 sm:p-8">
       <SeatPickerHeader />
@@ -10,7 +10,7 @@ export function SeatPicker({ selectedSeats, toggleSeat }) {
         </div>
         <div className="mt-8 space-y-3">
           {seatRows.map((row) => (
-            <SeatRow key={row} row={row} selectedSeats={selectedSeats} toggleSeat={toggleSeat} />
+            <SeatRow key={row} occupiedSeats={occupiedSeats} row={row} selectedSeats={selectedSeats} toggleSeat={toggleSeat} />
           ))}
         </div>
       </div>
@@ -43,7 +43,7 @@ function SeatLegend({ color, label }) {
   );
 }
 
-function SeatRow({ row, selectedSeats, toggleSeat }) {
+function SeatRow({ occupiedSeats, row, selectedSeats, toggleSeat }) {
   return (
     <div className="flex items-center gap-2">
       <span className="w-4 text-center text-sm text-slate-400">{row}</span>

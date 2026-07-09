@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Footer } from "../components/layout/Footer";
 import { Header } from "../components/layout/Header";
-import { markBookingPaid } from "../services/api";
+import { getTicketPdfUrl, markBookingPaid, sendTicketEmail as sendTicketEmailRequest } from "../services/api";
 import { loadCheckout, saveCheckout } from "../services/checkoutStorage";
 import { asset } from "../utils/assets";
 import { formatRupiah } from "../utils/currency";
@@ -9,8 +9,13 @@ import { formatRupiah } from "../utils/currency";
 export function PaymentPage() {
   const [checkout, setCheckout] = useState(loadCheckout);
   const [error, setError] = useState("");
+  const [email, setEmail] = useState("guest@example.com");
+  const [emailMessage, setEmailMessage] = useState("");
+  const [emailPreviewUrl, setEmailPreviewUrl] = useState("");
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
-  const qrCells = useMemo(() => buildMockQrCells(checkout?.payment?.qrString || ""), [checkout]);
+  const [showTicket, setShowTicket] = useState(false);
+  const qrisCells = useMemo(() => buildMockQrCells(checkout?.payment?.qrString || ""), [checkout]);
 
   useEffect(() => {
     if (!checkout) {
@@ -37,10 +42,37 @@ export function PaymentPage() {
 
       setCheckout(nextCheckout);
       saveCheckout(nextCheckout);
+      setShowTicket(true);
     } catch (paymentError) {
       setError(paymentError.message);
     } finally {
       setIsPaying(false);
+    }
+  }
+
+  async function sendTicketEmail() {
+    if (!checkout?.booking?._id) return;
+
+    setIsSendingEmail(true);
+    setEmailMessage("");
+    setEmailPreviewUrl("");
+    setError("");
+
+    try {
+      const result = await sendTicketEmailRequest(checkout.booking._id, email);
+      const nextCheckout = {
+        ...checkout,
+        booking: result.booking
+      };
+
+      setCheckout(nextCheckout);
+      saveCheckout(nextCheckout);
+      setEmailMessage(result.message);
+      setEmailPreviewUrl(result.previewUrl || "");
+    } catch (emailError) {
+      setError(emailError.message);
+    } finally {
+      setIsSendingEmail(false);
     }
   }
 
@@ -61,7 +93,7 @@ export function PaymentPage() {
           <div className="mt-10 grid gap-8 md:grid-cols-[320px_1fr] md:items-center">
             <div className="qris-panel">
               <div className="qris-frame" aria-label="Mock QRIS code">
-                {qrCells.map((active, index) => (
+                {qrisCells.map((active, index) => (
                   <span className={active ? "is-active" : ""} key={index} />
                 ))}
                 <div className="qris-logo">BM</div>
@@ -96,6 +128,14 @@ export function PaymentPage() {
                 >
                   {paid ? "Payment successful" : isPaying ? "Processing..." : "Simulate QRIS Payment Success"}
                 </button>
+                {paid ? (
+                  <button
+                    onClick={() => setShowTicket(true)}
+                    className="rounded-xl border border-emerald-400/60 px-6 py-3 font-semibold text-emerald-100 hover:bg-emerald-500/10"
+                  >
+                    View ticket
+                  </button>
+                ) : null}
                 <a href="#booking" className="rounded-xl border border-slate-600 px-6 py-3 font-semibold text-slate-200 transition hover:bg-slate-800">
                   Back to booking
                 </a>
@@ -125,7 +165,87 @@ export function PaymentPage() {
           )}
         </aside>
       </main>
+
+      {paid && showTicket ? (
+        <TicketModal
+          checkout={checkout}
+          email={email}
+          emailMessage={emailMessage}
+          emailPreviewUrl={emailPreviewUrl}
+          isSendingEmail={isSendingEmail}
+          onClose={() => setShowTicket(false)}
+          onEmailChange={setEmail}
+          onSendEmail={sendTicketEmail}
+        />
+      ) : null}
+
       <Footer compact />
+    </div>
+  );
+}
+
+function TicketModal({ checkout, email, emailMessage, emailPreviewUrl, isSendingEmail, onClose, onEmailChange, onSendEmail }) {
+  const booking = checkout.booking;
+  const ticket = booking.ticket || {};
+
+  return (
+    <div className="ticket-modal-backdrop" role="dialog" aria-modal="true" aria-label="Your movie ticket">
+      <div className="ticket-modal">
+        <button className="ticket-close" onClick={onClose} aria-label="Close ticket">
+          ×
+        </button>
+
+        <div className="ticket-mobile-card">
+          <div className="ticket-top">
+            <p>Order code</p>
+            <strong>{ticket.ticketCode}</strong>
+            <img src={ticket.qrImageDataUrl} alt="Ticket QR code" className="ticket-main-qr" />
+            <span>Scan to redeem</span>
+          </div>
+
+          <div className="ticket-perforation" />
+
+          <div className="ticket-details">
+            <img src={booking.moviePoster} alt="" className="ticket-poster" />
+            <div>
+              <h2>{booking.movieTitle}</h2>
+              <p>🎬 Beatrix Movie</p>
+              <p>📍 {booking.cinema}</p>
+              <p>📅 {new Date(booking.showtime).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</p>
+              <p>💺 {booking.seats?.join(", ")}</p>
+            </div>
+          </div>
+
+          <div className="ticket-total">
+            <span>Total payment</span>
+            <strong>{formatRupiah(booking.totalPrice || 0)}</strong>
+          </div>
+        </div>
+
+        <div className="ticket-actions-card">
+          <p className="ticket-kicker">YOUR TICKET</p>
+          <h3>{booking.movieTitle}</h3>
+          <p>Ticket Code: {ticket.ticketCode}</p>
+          <p>Seats: {booking.seats?.join(", ")}</p>
+
+          <div className="ticket-action-row">
+            <input onChange={(event) => onEmailChange(event.target.value)} placeholder="guest@example.com" value={email} />
+            <button disabled={isSendingEmail} onClick={onSendEmail}>
+              {isSendingEmail ? "Sending..." : "Send email"}
+            </button>
+            <a href={getTicketPdfUrl(booking._id)} target="_blank">
+              Download PDF
+            </a>
+          </div>
+
+          {emailMessage ? <p className="ticket-email-message">{emailMessage}</p> : null}
+          {emailPreviewUrl ? (
+            <a className="ticket-preview-link" href={emailPreviewUrl} target="_blank">
+              Open email preview
+            </a>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
