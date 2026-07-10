@@ -3,6 +3,7 @@ import { defaultMovie, getMovieKey } from "../features/movies/data/movies.js";
 import { useMovies } from "../features/movies/hooks/useMovies.js";
 import { useHashRoute } from "../hooks/useHashRoute.js";
 import { BookingPage } from "../pages/BookingPage.jsx";
+import { AdminPage } from "../pages/AdminPage.jsx";
 import { HomePage } from "../pages/HomePage.jsx";
 import { PaymentPage } from "../pages/PaymentPage.jsx";
 
@@ -31,6 +32,10 @@ export default function App() {
 
   if (route === "payment") {
     return <PaymentPage />;
+  }
+
+  if (route === "admin") {
+    return <AdminPage movies={movies} moviesLoading={loading} />;
   }
 
   return (
