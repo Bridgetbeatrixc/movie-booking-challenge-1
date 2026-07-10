@@ -6,9 +6,9 @@ Use this folder for admin dashboard, manage movies, manage showtimes, and all-bo
 
 ## Suggested Files
 
-- `pages/` - Dashboard, manage movies, manage showtimes, and all bookings.
+- `../../pages/` - route-level admin screens.
+- `api/` - Admin API calls.
 - `components/` - Admin layout, sidebar, stat cards, forms, and tables.
-- `services/` - Admin API calls.
 
 ## Integration
 

@@ -6,9 +6,10 @@ Use this folder for final booking confirmation, user booking history, booking de
 
 ## Suggested Files
 
-- `pages/` - My bookings, booking detail, and confirmation pages.
+- `../../pages/` - route-level booking screens.
+- `api/` - Booking API calls.
 - `components/` - Booking card, cancel dialog, status badge, and conflict feedback.
-- `services/` - Booking API calls.
+- `storage/` - Booking-related browser storage helpers.
 
 ## Integration
 

@@ -1,4 +1,4 @@
-import { formatCurrency, formatShowDate, formatShowTime, isPastShowtime } from "../../../shared/utils/formatters.js";
+import { formatCurrency, formatShowDate, formatShowTime, isPastShowtime } from "../../../utils/formatters.js";
 
 function groupShowtimes(showtimes) {
   return showtimes.reduce((groups, showtime) => {

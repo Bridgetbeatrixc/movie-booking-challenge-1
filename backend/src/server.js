@@ -7,7 +7,7 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import bookingRoutes from "./modules/bookings/booking.routes.js";
 import movieRoutes from "./modules/movies/movie.routes.js";
 import showtimeRoutes from "./modules/showtimes/showtime.routes.js";
-import { seedMovies } from "./services/seedMovies.js";
+import { seedMovies } from "./shared/services/seedMovies.js";
 
 dotenv.config();
 

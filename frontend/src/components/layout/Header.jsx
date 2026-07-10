@@ -37,9 +37,6 @@ function HomeNavigation() {
         <a href="#coming-soon">Coming soon</a>
         <a href="#footer">Contact</a>
       </nav>
-      <a href="#movies" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900">
-        Book now
-      </a>
     </>
   );
 }

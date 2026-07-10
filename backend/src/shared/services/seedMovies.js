@@ -1,7 +1,7 @@
-import { sampleMovies } from "../data/sampleMovies.js";
-import { sampleShowtimes } from "../data/sampleShowtimes.js";
-import { Movie } from "../modules/movies/movie.model.js";
-import { Showtime } from "../modules/showtimes/showtime.model.js";
+import { sampleMovies } from "../../data/sampleMovies.js";
+import { sampleShowtimes } from "../../data/sampleShowtimes.js";
+import { Movie } from "../../modules/movies/movie.model.js";
+import { Showtime } from "../../modules/showtimes/showtime.model.js";
 
 function dateOffset(days) {
   const date = new Date();
@@ -30,6 +30,7 @@ export async function seedMovies() {
               title: movie.title,
               shortTitle: movie.shortTitle,
               description: movie.description,
+              trailerVideoId: movie.trailerVideoId,
               poster: movie.poster,
               genres: movie.genres,
               runtime: movie.runtime,

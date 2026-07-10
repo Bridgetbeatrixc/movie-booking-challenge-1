@@ -26,6 +26,11 @@ const movieSchema = new mongoose.Schema(
       default: "",
       trim: true
     },
+    trailerVideoId: {
+      type: String,
+      default: "",
+      trim: true
+    },
     genres: [String],
     runtime: String,
     rating: Number,

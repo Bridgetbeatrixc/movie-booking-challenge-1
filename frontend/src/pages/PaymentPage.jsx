@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { loadCheckout, saveCheckout } from "../services/checkoutStorage.js";
-import { Footer } from "../../../shared/components/layout/Footer.jsx";
-import { Header } from "../../../shared/components/layout/Header.jsx";
-import { getTicketPdfUrl, markBookingPaid, sendTicketEmail as sendTicketEmailRequest } from "../../../shared/api/api.js";
-import { asset } from "../../../shared/utils/assets.js";
-import { formatRupiah } from "../../../shared/utils/currency.js";
+import { Footer } from "../components/layout/Footer.jsx";
+import { Header } from "../components/layout/Header.jsx";
+import { getTicketPdfUrl, markBookingPaid, sendTicketEmail as sendTicketEmailRequest } from "../features/bookings/api/bookingApi.js";
+import { loadCheckout, saveCheckout } from "../features/bookings/storage/checkoutStorage.js";
+import { asset } from "../utils/assets.js";
+import { formatRupiah } from "../utils/currency.js";
 
 export function PaymentPage() {
   const [checkout, setCheckout] = useState(loadCheckout);

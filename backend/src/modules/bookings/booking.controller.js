@@ -1,6 +1,6 @@
 import { Movie } from "../movies/movie.model.js";
-import { createTicketPdf, ensureTicket, sendTicketEmail } from "../../services/ticketService.js";
-import { createMockXenditInvoice } from "../../services/xenditMock.js";
+import { createTicketPdf, ensureTicket, sendTicketEmail } from "../../shared/services/ticketService.js";
+import { createMockXenditInvoice } from "../../shared/services/xenditMock.js";
 import { Booking } from "./booking.model.js";
 
 const defaultCinema = "Beatrix Movieplex - Central World";

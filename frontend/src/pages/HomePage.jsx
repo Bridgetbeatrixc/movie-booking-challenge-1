@@ -1,7 +1,7 @@
-import { Header } from "../../../shared/components/layout/Header.jsx";
-import { Footer } from "../../../shared/components/layout/Footer.jsx";
-import { asset } from "../../../shared/utils/assets.js";
-import { advanceSaleMovies, comingSoonMovies } from "../data/movies.js";
+import { Footer } from "../components/layout/Footer.jsx";
+import { Header } from "../components/layout/Header.jsx";
+import { advanceSaleMovies, comingSoonMovies } from "../features/movies/data/movies.js";
+import { asset } from "../utils/assets.js";
 
 const statusOptions = [
   { label: "All status", value: "" },
@@ -147,8 +147,6 @@ function PromoCard({ cardClass, id, image, imageClass, text, title }) {
 }
 
 function FeaturedMovies({ filters, movies, moviesError, moviesLoading, pagination, selectedMovie, setFilters, setSelectedMovie }) {
-  const selectedMovieAvailable = movies.some((movie) => movie.title === selectedMovie.title);
-
   return (
     <section id="movies" className="mx-auto max-w-7xl px-6 pb-12">
       <div className="mb-6 flex items-end justify-between gap-4">
@@ -172,7 +170,10 @@ function FeaturedMovies({ filters, movies, moviesError, moviesLoading, paginatio
                 selectedMovie.title === movie.title ? "selected border-blue-400" : "border-slate-700"
               }`}
               key={movie.id || movie._id || movie.title}
-              onClick={() => setSelectedMovie(movie)}
+              onClick={() => {
+                setSelectedMovie(movie);
+                window.location.hash = "movie";
+              }}
               type="button"
             >
               <img src={movie.poster} alt={movie.title} className="h-64 w-full object-cover object-top" />
@@ -192,22 +193,6 @@ function FeaturedMovies({ filters, movies, moviesError, moviesLoading, paginatio
         </p>
       )}
       <MoviePagination loading={moviesLoading} pagination={pagination} setFilters={setFilters} />
-      <div className="mt-7 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-blue-400/40 bg-blue-950/50 p-4">
-        <p>
-          Selected movie:{" "}
-          <strong className="text-blue-200">
-            {selectedMovieAvailable ? selectedMovie.title : "Choose a movie from the current result"}
-          </strong>
-        </p>
-        <a
-          href={selectedMovieAvailable ? "#booking" : "#movies"}
-          className={`rounded-lg px-5 py-2 text-sm font-semibold ${
-            selectedMovieAvailable ? "bg-blue-600 hover:bg-blue-500" : "cursor-not-allowed bg-slate-700 text-slate-400"
-          }`}
-        >
-          Choose seats
-        </a>
-      </div>
     </section>
   );
 }
@@ -219,7 +204,6 @@ function MovieControls({ filters, loading, setFilters }) {
         Search
         <input
           className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-400"
-          disabled={loading}
           onChange={(event) => setFilters({ search: event.target.value })}
           placeholder="Title or description"
           type="search"
@@ -230,7 +214,6 @@ function MovieControls({ filters, loading, setFilters }) {
         Genre
         <input
           className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-400"
-          disabled={loading}
           onChange={(event) => setFilters({ genre: event.target.value })}
           placeholder="Horror, Sci-Fi..."
           type="search"
@@ -241,7 +224,6 @@ function MovieControls({ filters, loading, setFilters }) {
         Status
         <select
           className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-400"
-          disabled={loading}
           onChange={(event) => setFilters({ status: event.target.value })}
           value={filters.status}
         >
@@ -256,7 +238,6 @@ function MovieControls({ filters, loading, setFilters }) {
         Sort
         <select
           className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-400"
-          disabled={loading}
           onChange={(event) => setFilters({ sort: event.target.value })}
           value={filters.sort}
         >

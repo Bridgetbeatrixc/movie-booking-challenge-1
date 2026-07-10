@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { asset, defaultMovie } from "../../movies/data/movies.js";
-import { isPastShowtime } from "../../../shared/utils/formatters.js";
-import { BookingSummary } from "../components/BookingSummary.jsx";
-import { SeatGrid } from "../components/SeatGrid.jsx";
-import { ShowtimeList } from "../components/ShowtimeList.jsx";
-import { fetchSeatAvailability, fetchShowtimesForMovie } from "../services/showtimeApi.js";
+import { asset, defaultMovie } from "../features/movies/data/movies.js";
+import { BookingSummary } from "../features/showtimes/components/BookingSummary.jsx";
+import { SeatGrid } from "../features/showtimes/components/SeatGrid.jsx";
+import { ShowtimeList } from "../features/showtimes/components/ShowtimeList.jsx";
+import { fetchSeatAvailability, fetchShowtimesForMovie } from "../features/showtimes/api/showtimeApi.js";
+import { isPastShowtime } from "../utils/formatters.js";
 
 export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
   const [showtimes, setShowtimes] = useState([]);

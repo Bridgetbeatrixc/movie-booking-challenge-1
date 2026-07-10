@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getMovies } from "../../../shared/api/api.js";
 import { movies as fallbackMovies } from "../data/movies.js";
+import { getMovies } from "../api/movieApi.js";
 
 function normalizeMovie(movie) {
   return {
@@ -23,6 +23,7 @@ export function useMovies() {
     page: 1,
     limit: 8
   });
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 8,
@@ -33,6 +34,14 @@ export function useMovies() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 350);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [filters]);
+
+  useEffect(() => {
     let active = true;
 
     async function loadMovies() {
@@ -40,7 +49,7 @@ export function useMovies() {
       setError("");
 
       try {
-        const response = await getMovies(filters);
+        const response = await getMovies(debouncedFilters);
         const apiMovies = Array.isArray(response) ? response : response.movies || [];
 
         if (active && apiMovies.length) {
@@ -73,7 +82,7 @@ export function useMovies() {
     return () => {
       active = false;
     };
-  }, [filters]);
+  }, [debouncedFilters]);
 
   function updateFilters(nextFilters) {
     setFilters((currentFilters) => ({
