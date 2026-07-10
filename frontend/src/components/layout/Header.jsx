@@ -1,4 +1,7 @@
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { asset } from "../../utils/assets.js";
+import { useAuth } from "../../features/auth/AuthContext.jsx";
 
 export function Header({ booking = false }) {
   return (
@@ -9,9 +12,9 @@ export function Header({ booking = false }) {
           : "absolute inset-x-0 top-0 z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-6"
       }
     >
-      <a href="#">
+      <Link to="/">
         <img src={asset("beatrix-logo.png")} alt="Beatrix Movie" className="h-9" />
-      </a>
+      </Link>
 
       {booking ? <BookingBackLink /> : <HomeNavigation />}
     </header>
@@ -20,27 +23,51 @@ export function Header({ booking = false }) {
 
 function BookingBackLink() {
   return (
-    <a href="#" className="text-sm text-slate-300 hover:text-white">
+    <Link to="/" className="text-sm text-slate-300 hover:text-white">
       Back to movies
-    </a>
+    </Link>
   );
 }
 
 function HomeNavigation() {
+  const { isAuthenticated, role, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    await logout();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <>
       <nav className="hidden gap-7 text-sm text-slate-300 md:flex">
-        <a className="text-white" href="#">
+        <Link className="text-white" to="/">
           Home
-        </a>
-        <a href="#movies">Movies</a>
+        </Link>
+        <Link to="/movies">Movies</Link>
         <a href="#coming-soon">Coming soon</a>
-        <a href="#admin">Admin</a>
+        
+        {isAuthenticated ? (
+          <>
+            <Link to="/my-bookings">My Bookings</Link>
+            {role === "admin" && <Link to="/admin">Admin</Link>}
+            <button onClick={handleLogout} className="text-slate-300 hover:text-white bg-transparent border-none cursor-pointer">
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/login">Login</Link>
+            <Link to="/register">Register</Link>
+          </>
+        )}
+        
         <a href="#footer">Contact</a>
       </nav>
-      <a href="#movies" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900">
+      <Link to="/movies" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900">
         Book now
-      </a>
+      </Link>
     </>
   );
 }

@@ -1,12 +1,12 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+import cookieParser from "cookie-parser";
 import { connectDB } from "./config/db.js";
-import adminRoutes from "./modules/admin/admin.routes.js";
-import authRoutes from "./modules/auth/auth.routes.js";
 import bookingRoutes from "./modules/bookings/booking.routes.js";
 import movieRoutes from "./modules/movies/movie.routes.js";
 import showtimeRoutes from "./modules/showtimes/showtime.routes.js";
+import authRoutes from "./modules/auth/auth.routes.js";
 import { seedMovies } from "./shared/services/seedMovies.js";
 
 dotenv.config();
@@ -26,14 +26,17 @@ app.use(
         callback(null, true);
         return;
       }
-
       callback(new Error("Origin is not allowed by CORS."));
-    }
+    },
+    credentials: true
   })
 );
-app.use(express.json());
 
-app.get("/", (_req, res) => {
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+app.get("/", (req, res) => {
   res.json({ message: "Beatrix Movie API is running" });
 });
 
@@ -41,15 +44,36 @@ app.use("/api/auth", authRoutes);
 app.use("/api/movies", movieRoutes);
 app.use("/api/showtimes", showtimeRoutes);
 app.use("/api/bookings", bookingRoutes);
-app.use("/api/admin", adminRoutes);
 
-app.use((error, _req, res, _next) => {
-  console.error(error);
-  const status = error.status || (error.code === 11000 ? 409 : 500);
+app.use((req, res, next) => {
+  const error = new Error(`Server endpoint not found - ${req.originalUrl}`);
+  error.status = 404;
+  next(error);
+});
+
+app.use((error, req, res, next) => {
+  let status = error.status || (res.statusCode === 200 ? 500 : res.statusCode);
+  let message = error.message || "Server error";
+
+  if (error.code === 11000) {
+    status = 409;
+    message = "Duplicate record or showtime schedule detected.";
+  }
+
+  if (error.name === "ValidationError") {
+    status = 400;
+    message = Object.values(error.errors).map((val) => val.message).join(", ");
+  }
+
+  if (error.name === "CastError" && error.kind === "ObjectId") {
+    status = 400;
+    message = "Invalid data identity reference format (ObjectId).";
+  }
 
   res.status(status).json({
-    message: error.code === 11000 ? "Duplicate resource." : error.message || "Server error",
-    details: error.details
+    message,
+    details: error.details,
+    stack: process.env.NODE_ENV === "production" ? null : error.stack
   });
 });
 
