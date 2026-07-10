@@ -27,12 +27,17 @@ Important rules:
 
 ## Movie Catalogue
 
-Status: active basic endpoints.
+Status: active public endpoints with search, filter, sort, and pagination.
 
 | Method | Endpoint | Access | Purpose |
 | --- | --- | --- | --- |
 | GET | `/api/movies` | Public | List movies |
+| GET | `/api/movies?search=arrival&genre=Sci-Fi&status=showing&page=1&limit=8&sort=rating` | Public | Search, filter, sort, and paginate movies |
+| GET | `/api/movies/genres` | Public | List available genres |
+| GET | `/api/movies/:idOrSlug` | Public | Movie detail |
 | POST | `/api/movies` | Admin later | Create movie |
+| PUT | `/api/movies/:idOrSlug` | Admin later | Update movie |
+| DELETE | `/api/movies/:idOrSlug` | Admin later | Delete movie if no showtimes exist |
 | GET | `/api/movies/:movieId/showtimes` | Public | List showtimes for one movie |
 
 ## Showtime and Seat Selection
@@ -41,6 +46,7 @@ Status: active.
 
 | Method | Endpoint | Access | Purpose |
 | --- | --- | --- | --- |
+| GET | `/api/showtimes` | Public | List showtimes with optional `movieId`, `date`, `from`, `studio`, `page`, and `limit` query |
 | GET | `/api/movies/:movieId/showtimes` | Public | Showtime list for one movie |
 | GET | `/api/showtimes/:id` | Public | Showtime detail |
 | GET | `/api/showtimes/:id/seats` | Public | Latest seat availability |

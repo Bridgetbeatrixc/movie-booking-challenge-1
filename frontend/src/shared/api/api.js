@@ -18,8 +18,16 @@ async function request(path, options = {}) {
   return data;
 }
 
-export function getMovies() {
-  return request("/api/movies");
+export function getMovies(params = {}) {
+  const search = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      search.set(key, value);
+    }
+  });
+
+  return request(`/api/movies${search.toString() ? `?${search.toString()}` : ""}`);
 }
 
 export function checkoutBooking(payload) {

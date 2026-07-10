@@ -21,6 +21,11 @@ const movieSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    description: {
+      type: String,
+      default: "",
+      trim: true
+    },
     genres: [String],
     runtime: String,
     rating: Number,
@@ -38,5 +43,7 @@ const movieSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+movieSchema.index({ title: "text", shortTitle: "text", description: "text" });
 
 export const Movie = mongoose.model("Movie", movieSchema);

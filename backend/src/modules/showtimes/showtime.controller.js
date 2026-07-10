@@ -7,7 +7,7 @@ import {
   validateSeatSelection
 } from "./seatValidation.js";
 
-const moviePopulateFields = "title poster genres runtime rating year price";
+const moviePopulateFields = "title shortTitle slug poster description genres runtime rating year status releaseDate price";
 
 function createError(status, message, details) {
   const error = new Error(message);
@@ -127,6 +127,62 @@ function formatShowtime(showtime) {
     createdAt: data.createdAt,
     updatedAt: data.updatedAt
   };
+}
+
+function toPositiveInt(value, fallback, max) {
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return fallback;
+  }
+
+  return Math.min(parsed, max);
+}
+
+export async function listShowtimes(req, res, next) {
+  try {
+    const filter = {};
+
+    if (req.query.movieId) {
+      assertObjectId(req.query.movieId, "Movie ID");
+      filter.movie = req.query.movieId;
+    }
+
+    if (req.query.date) {
+      filter.date = req.query.date;
+    } else if (req.query.from) {
+      filter.date = { $gte: req.query.from };
+    }
+
+    if (req.query.studio) {
+      filter.studio = new RegExp(req.query.studio, "i");
+    }
+
+    const page = toPositiveInt(req.query.page, 1, 1000);
+    const limit = toPositiveInt(req.query.limit, 20, 100);
+    const skip = (page - 1) * limit;
+
+    const [showtimes, total] = await Promise.all([
+      Showtime.find(filter)
+        .populate("movie", moviePopulateFields)
+        .sort({ date: 1, time: 1, studio: 1 })
+        .skip(skip)
+        .limit(limit),
+      Showtime.countDocuments(filter)
+    ]);
+
+    res.json({
+      showtimes: showtimes.map(formatShowtime),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(Math.ceil(total / limit), 1)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function listShowtimesByMovie(req, res, next) {
