@@ -1,4 +1,6 @@
-export const asset = (name) => `/assets/${name}`;
+import { asset } from "../../../shared/utils/assets.js";
+
+export { asset };
 
 export const movies = [
   {
@@ -43,7 +45,7 @@ export const movies = [
   }
 ];
 
-export const comingSoon = [
+export const comingSoonMovies = [
   {
     title: "The Nun",
     poster: asset("the-nun.png"),
@@ -61,7 +63,9 @@ export const comingSoon = [
   }
 ];
 
+export const comingSoon = comingSoonMovies;
 export const defaultMovie = movies[0];
+export const advanceSaleMovies = [comingSoonMovies[0], movies[0], movies[1], movies[3]];
 
 export function getMovieKey(movie) {
   return movie?.key || movie?.slug || movie?.id || movie?._id || "";

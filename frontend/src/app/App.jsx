@@ -1,38 +1,45 @@
 import { useEffect, useState } from "react";
-import { defaultMovie, movies } from "../features/movies/data/movies.js";
+import { BookingPage } from "../features/bookings/pages/BookingPage.jsx";
+import { PaymentPage } from "../features/bookings/pages/PaymentPage.jsx";
+import { defaultMovie, getMovieKey } from "../features/movies/data/movies.js";
+import { useMovies } from "../features/movies/hooks/useMovies.js";
 import { HomePage } from "../features/movies/pages/HomePage.jsx";
-import { SeatSelectionPage } from "../features/showtimes/pages/SeatSelectionPage.jsx";
+import { useHashRoute } from "../shared/hooks/useHashRoute.js";
+
+function getInitialMovie(movies) {
+  const savedMovie = localStorage.getItem("selectedMovie");
+  return movies.find((movie) => getMovieKey(movie) === savedMovie || movie.title === savedMovie) || defaultMovie;
+}
 
 export default function App() {
-  const [page, setPage] = useState(() => (window.location.hash === "#booking" ? "booking" : "home"));
-  const [selectedMovie, setSelectedMovie] = useState(() => {
-    const saved = localStorage.getItem("selectedMovie");
-    return movies.find((movie) => movie.key === saved || movie.title === saved) || defaultMovie;
-  });
+  const route = useHashRoute();
+  const { movies, loading, error } = useMovies();
+  const [selectedMovie, setSelectedMovie] = useState(() => getInitialMovie(movies));
 
   useEffect(() => {
-    const onHashChange = () => {
-      const hash = window.location.hash;
-      setPage(hash === "#booking" ? "booking" : "home");
-
-      if (hash === "#booking" || hash === "#" || hash === "") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-    };
-
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
+    setSelectedMovie((currentMovie) => movies.find((movie) => movie.title === currentMovie.title) || currentMovie);
+  }, [movies]);
 
   function chooseMovie(movie) {
     setSelectedMovie(movie);
-    localStorage.setItem("selectedMovie", movie.key);
+    localStorage.setItem("selectedMovie", getMovieKey(movie) || movie.title);
   }
 
-  return page === "booking" ? (
-    <SeatSelectionPage selectedMovie={selectedMovie} setSelectedMovie={chooseMovie} />
-  ) : (
-    <HomePage selectedMovie={selectedMovie} setSelectedMovie={chooseMovie} />
+  if (route === "booking") {
+    return <BookingPage selectedMovie={selectedMovie} setSelectedMovie={chooseMovie} />;
+  }
+
+  if (route === "payment") {
+    return <PaymentPage />;
+  }
+
+  return (
+    <HomePage
+      movies={movies}
+      moviesError={error}
+      moviesLoading={loading}
+      selectedMovie={selectedMovie}
+      setSelectedMovie={chooseMovie}
+    />
   );
 }
-

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ServerApiVersion } from "mongodb";
 
 export async function connectDB() {
   const uri = process.env.MONGODB_URI;
@@ -8,7 +9,15 @@ export async function connectDB() {
   }
 
   mongoose.set("strictQuery", true);
-  await mongoose.connect(uri);
+  await mongoose.connect(uri, {
+    serverApi: {
+      version: ServerApiVersion.v1,
+      strict: true,
+      deprecationErrors: true
+    }
+  });
 
-  console.log("MongoDB connected");
+  await mongoose.connection.db.admin().command({ ping: 1 });
+
+  console.log("Pinged your deployment. You successfully connected to MongoDB!");
 }

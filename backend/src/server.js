@@ -7,6 +7,7 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import bookingRoutes from "./modules/bookings/booking.routes.js";
 import movieRoutes from "./modules/movies/movie.routes.js";
 import showtimeRoutes from "./modules/showtimes/showtime.routes.js";
+import { seedMovies } from "./services/seedMovies.js";
 
 dotenv.config();
 
@@ -32,7 +33,7 @@ app.use(
 );
 app.use(express.json());
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.json({ message: "Beatrix Movie API is running" });
 });
 
@@ -47,12 +48,13 @@ app.use((error, _req, res, _next) => {
   const status = error.status || (error.code === 11000 ? 409 : 500);
 
   res.status(status).json({
-    message: error.code === 11000 ? "Duplicate showtime schedule." : error.message || "Server error",
+    message: error.code === 11000 ? "Duplicate resource." : error.message || "Server error",
     details: error.details
   });
 });
 
 connectDB()
+  .then(seedMovies)
   .then(() => {
     app.listen(port, () => {
       console.log(`API listening on http://localhost:${port}`);

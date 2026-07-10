@@ -1,16 +1,25 @@
-import { asset, comingSoon, movies } from "../data/movies.js";
+import { Header } from "../../../shared/components/layout/Header.jsx";
+import { Footer } from "../../../shared/components/layout/Footer.jsx";
+import { asset } from "../../../shared/utils/assets.js";
+import { advanceSaleMovies, comingSoonMovies } from "../data/movies.js";
 
-export function HomePage({ selectedMovie, setSelectedMovie }) {
+export function HomePage({ movies, moviesError, moviesLoading, selectedMovie, setSelectedMovie }) {
   return (
     <>
       <Header />
       <main>
         <Hero />
         <Promos />
-        <FeaturedMovies selectedMovie={selectedMovie} setSelectedMovie={setSelectedMovie} />
-        <ComingSoon />
-        <ShowingNow />
-        <AdvanceSales />
+        <FeaturedMovies
+          movies={movies}
+          moviesError={moviesError}
+          moviesLoading={moviesLoading}
+          selectedMovie={selectedMovie}
+          setSelectedMovie={setSelectedMovie}
+        />
+        <ComingSoon movies={movies} />
+        <ShowingNow movies={movies} />
+        <AdvanceSales movies={movies} />
       </main>
       <AppPromo />
       <Footer />
@@ -18,28 +27,13 @@ export function HomePage({ selectedMovie, setSelectedMovie }) {
   );
 }
 
-function Header() {
-  return (
-    <header className="absolute inset-x-0 top-0 z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
-      <a href="#">
-        <img src={asset("beatrix-logo.png")} alt="Beatrix Movie" className="h-9" />
-      </a>
-      <nav className="hidden gap-7 text-sm text-slate-300 md:flex">
-        <a className="text-white" href="#">
-          Home
-        </a>
-        <a href="#movies">Movies</a>
-        <a href="#coming-soon">Coming soon</a>
-        <a href="#footer">Contact</a>
-      </nav>
-      <a href="#movies" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900">
-        Book now
-      </a>
-    </header>
-  );
-}
-
 function Hero() {
+  const shortcuts = [
+    { label: "Bioskop", href: "#movies", icon: "cinema-icon.png" },
+    { label: "Film", href: "#movies", icon: "movie-icon.svg" },
+    { label: "Snacks", href: "#snacks", icon: "snack-icon.svg" }
+  ];
+
   return (
     <section className="hero-section relative min-h-[720px] overflow-hidden bg-[#020b1e] px-6 pt-40 text-center">
       <img
@@ -64,18 +58,12 @@ function Hero() {
         </a>
       </div>
       <div className="hero-shortcuts absolute left-1/2 z-10 -translate-x-1/2 translate-y-1/2 sm:top-[58%]">
-        <a className="hero-shortcut" href="#movies">
-          <img src={asset("cinema-icon.png")} alt="" aria-hidden="true" />
-          <span>Bioskop</span>
-        </a>
-        <a className="hero-shortcut" href="#movies">
-          <img src={asset("movie-icon.svg")} alt="" aria-hidden="true" />
-          <span>Film</span>
-        </a>
-        <a className="hero-shortcut" href="#snacks">
-          <img src={asset("snack-icon.svg")} alt="" aria-hidden="true" />
-          <span>Snacks</span>
-        </a>
+        {shortcuts.map((shortcut) => (
+          <a className="hero-shortcut" href={shortcut.href} key={shortcut.label}>
+            <img src={asset(shortcut.icon)} alt="" aria-hidden="true" />
+            <span>{shortcut.label}</span>
+          </a>
+        ))}
       </div>
     </section>
   );
@@ -132,7 +120,7 @@ function PromoCard({ cardClass, id, image, imageClass, text, title }) {
   );
 }
 
-function FeaturedMovies({ selectedMovie, setSelectedMovie }) {
+function FeaturedMovies({ movies, moviesError, moviesLoading, selectedMovie, setSelectedMovie }) {
   return (
     <section id="movies" className="mx-auto max-w-7xl px-6 pb-12">
       <div className="mb-6 flex items-end justify-between gap-4">
@@ -140,8 +128,13 @@ function FeaturedMovies({ selectedMovie, setSelectedMovie }) {
           <p className="text-sm font-semibold text-blue-300">FEATURED MOVIE</p>
           <h2 className="mt-1 text-3xl font-semibold">Choose your movie</h2>
         </div>
-        <span className="text-sm text-slate-400">Pick one to book seats</span>
+        <span className="text-sm text-slate-400">{moviesLoading ? "Loading from MongoDB..." : "Pick one to book seats"}</span>
       </div>
+      {moviesError ? (
+        <p className="mb-4 rounded-lg border border-amber-400/30 bg-amber-950/40 p-3 text-sm text-amber-100">
+          Using local sample movies because API is offline: {moviesError}
+        </p>
+      ) : null}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {movies.map((movie) => (
           <button
@@ -174,40 +167,51 @@ function FeaturedMovies({ selectedMovie, setSelectedMovie }) {
   );
 }
 
-function ComingSoon() {
+function ComingSoon({ movies = [] }) {
+  const apiComingSoon = movies.filter((movie) => movie.status === "coming-soon" || movie.status === "advance-sale");
+  const displayMovies = apiComingSoon.length >= 3 ? apiComingSoon.slice(0, 3) : comingSoonMovies;
+
   return (
     <section id="coming-soon" className="catalog-section">
       <SectionHeader title="Coming Soon" />
       <div className="trailer-grid">
-        {comingSoon.map((movie) => (
-          <article className="trailer-card" key={movie.title}>
-            <div className="trailer-media">
-              <img src={movie.poster} alt={`${movie.title} trailer`} />
-              <span className="trailer-shade" />
-              <span className="play-button" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="m9 7 7 5-7 5V7Z" fill="currentColor" />
-                </svg>
-              </span>
-              <span className="trailer-label">Trailer</span>
-            </div>
-            <div className="trailer-copy">
-              <h3>{movie.title}</h3>
-              <p>{movie.release}</p>
-            </div>
-          </article>
+        {displayMovies.map((movie) => (
+          <TrailerCard key={movie.title} movie={movie} />
         ))}
       </div>
     </section>
   );
 }
 
-function ShowingNow() {
+function TrailerCard({ movie }) {
+  return (
+    <article className="trailer-card">
+      <div className="trailer-media">
+        <img src={movie.poster} alt={`${movie.title} trailer`} />
+        <span className="trailer-shade" />
+        <span className="play-button" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="m9 7 7 5-7 5V7Z" fill="currentColor" />
+          </svg>
+        </span>
+        <span className="trailer-label">Trailer</span>
+      </div>
+      <div className="trailer-copy">
+        <h3>{movie.title}</h3>
+        <p>{movie.release || "Coming soon"}</p>
+      </div>
+    </article>
+  );
+}
+
+function ShowingNow({ movies = [] }) {
+  const displayMovies = movies.length ? movies : advanceSaleMovies;
+
   return (
     <section className="catalog-section">
       <SectionHeader title="Showing Now" />
       <div className="movie-shelf">
-        {movies.map((movie) => (
+        {displayMovies.map((movie) => (
           <ShelfCard key={movie.title} movie={movie} />
         ))}
       </div>
@@ -215,22 +219,16 @@ function ShowingNow() {
   );
 }
 
-function AdvanceSales() {
-  const advanceMovies = [comingSoon[0], movies[0], movies[1], movies[3]];
+function AdvanceSales({ movies = [] }) {
+  const apiAdvanceMovies = movies.filter((movie) => movie.status === "advance-sale");
+  const displayMovies = apiAdvanceMovies.length >= 4 ? apiAdvanceMovies.slice(0, 4) : advanceSaleMovies;
 
   return (
     <section className="catalog-section catalog-section-last">
       <SectionHeader title="Advance Ticket Sales" />
       <div className="movie-shelf">
-        {advanceMovies.map((movie) => (
-          <article className="shelf-card" key={movie.title}>
-            <img src={movie.poster} alt={movie.title} />
-            <h3>{movie.shortTitle || movie.title}</h3>
-            <p className="movie-meta">
-              <span>From Rp35.000</span>
-              <span className="advance-badge">Advance</span>
-            </p>
-          </article>
+        {displayMovies.map((movie) => (
+          <ShelfCard key={movie.title} movie={movie} advance />
         ))}
       </div>
     </section>
@@ -246,14 +244,14 @@ function SectionHeader({ title }) {
   );
 }
 
-function ShelfCard({ movie }) {
+function ShelfCard({ movie, advance = false }) {
   return (
     <article className="shelf-card">
       <img src={movie.poster} alt={movie.title} />
-      <h3>{movie.shortTitle}</h3>
+      <h3>{movie.shortTitle || movie.title}</h3>
       <p className="movie-meta">
-        <span>{movie.year}</span>
-        <span className="meta-rating">Rating {movie.rating}</span>
+        <span>{advance ? "From Rp35.000" : movie.year}</span>
+        <span className={advance ? "advance-badge" : "meta-rating"}>{advance ? "Advance" : `Rating ${movie.rating}`}</span>
       </p>
     </article>
   );
@@ -280,15 +278,5 @@ function AppPromo() {
         </div>
       </div>
     </section>
-  );
-}
-
-function Footer() {
-  return (
-    <footer id="footer" className="border-t border-slate-800 bg-[#010816] px-6 py-10 text-center">
-      <img src={asset("beatrix-logo.png")} alt="Beatrix Movie" className="mx-auto h-9" />
-      <p className="mt-5 text-sm text-slate-400">About / FAQ / Contact</p>
-      <p className="mt-4 text-xs text-slate-500">Copyright 2026 Beatrix Movie. All rights reserved.</p>
-    </footer>
   );
 }

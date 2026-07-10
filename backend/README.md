@@ -15,10 +15,11 @@ The API runs on `http://localhost:5000` by default.
 ## Module Structure
 
 - `src/modules/auth` - placeholder auth model, controller, routes, and middleware
-- `src/modules/movies` - movie model and movie routes
+- `src/modules/movies` - movie model, controller, and routes
 - `src/modules/showtimes` - showtime model, controller, routes, and seat validation
-- `src/modules/bookings` - booking model and booking routes
+- `src/modules/bookings` - booking model, checkout controller, ticket/payment routes
 - `src/modules/admin` - placeholder admin controller and routes
+- `src/services` - seed movies, ticket generation, and Xendit mock helpers
 - `src/shared` - shared middleware and utilities
 
 ## Current Routes
@@ -33,6 +34,7 @@ Authentication placeholders:
 Movies:
 
 - `GET /api/movies`
+- `GET /api/movies/:id`
 - `POST /api/movies`
 - `GET /api/movies/:movieId/showtimes`
 
@@ -44,10 +46,16 @@ Showtimes:
 - `PUT /api/showtimes/:id`
 - `DELETE /api/showtimes/:id`
 
-Bookings:
+Bookings and payment mock:
 
 - `GET /api/bookings`
 - `POST /api/bookings`
+- `GET /api/bookings/occupied`
+- `POST /api/bookings/checkout`
+- `PATCH /api/bookings/:id/mock-paid`
+- `POST /api/bookings/:id/email`
+- `POST /api/bookings/:id/mock-email`
+- `GET /api/bookings/:id/ticket.pdf`
 
 Admin placeholders:
 
