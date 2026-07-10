@@ -12,7 +12,23 @@ npm run dev
 
 The API runs on `http://localhost:5000` by default.
 
+## Module Structure
+
+- `src/modules/auth` - placeholder auth model, controller, routes, and middleware
+- `src/modules/movies` - movie model and movie routes
+- `src/modules/showtimes` - showtime model, controller, routes, and seat validation
+- `src/modules/bookings` - booking model and booking routes
+- `src/modules/admin` - placeholder admin controller and routes
+- `src/shared` - shared middleware and utilities
+
 ## Current Routes
+
+Authentication placeholders:
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
 
 Movies:
 
@@ -32,6 +48,11 @@ Bookings:
 
 - `GET /api/bookings`
 - `POST /api/bookings`
+
+Admin placeholders:
+
+- `GET /api/admin/stats`
+- `GET /api/admin/bookings`
 
 ## Showtime Request Example
 

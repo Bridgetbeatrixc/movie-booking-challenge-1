@@ -2,6 +2,10 @@
 
 This is the working guide for the Showtime and Seat Selection role.
 
+For team-wide ownership, see `FEATURE_OWNERS.md`.
+For endpoint contracts, see `API_CONTRACT.md`.
+For local setup, see `RUNNING_GUIDE.md`.
+
 ## Scope
 
 - Show movie showtimes by selected movie.
@@ -14,11 +18,11 @@ This is the working guide for the Showtime and Seat Selection role.
 
 Main files:
 
-- `backend/src/models/Showtime.js`
-- `backend/src/controllers/showtimeController.js`
-- `backend/src/routes/showtimes.js`
-- `backend/src/utils/seatValidation.js`
-- `backend/src/routes/movies.js`
+- `backend/src/modules/showtimes/showtime.model.js`
+- `backend/src/modules/showtimes/showtime.controller.js`
+- `backend/src/modules/showtimes/showtime.routes.js`
+- `backend/src/modules/showtimes/seatValidation.js`
+- `backend/src/modules/movies/movie.routes.js`
 - `backend/src/server.js`
 
 Endpoints:
@@ -41,13 +45,13 @@ Seat layout:
 
 Main files:
 
-- `frontend/src/components/booking/SeatSelectionPage.jsx`
-- `frontend/src/components/booking/ShowtimeList.jsx`
-- `frontend/src/components/booking/SeatGrid.jsx`
-- `frontend/src/components/booking/SeatLegend.jsx`
-- `frontend/src/components/booking/BookingSummary.jsx`
-- `frontend/src/services/showtimeApi.js`
-- `frontend/src/data/showtimes.js`
+- `frontend/src/features/showtimes/pages/SeatSelectionPage.jsx`
+- `frontend/src/features/showtimes/components/ShowtimeList.jsx`
+- `frontend/src/features/showtimes/components/SeatGrid.jsx`
+- `frontend/src/features/showtimes/components/SeatLegend.jsx`
+- `frontend/src/features/showtimes/components/BookingSummary.jsx`
+- `frontend/src/features/showtimes/services/showtimeApi.js`
+- `frontend/src/features/showtimes/data/showtimes.js`
 
 The frontend currently has local fallback data, so the feature can be demoed before MongoDB has showtime seed data.
 

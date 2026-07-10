@@ -2,9 +2,11 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import { connectDB } from "./config/db.js";
-import bookingRoutes from "./routes/bookings.js";
-import movieRoutes from "./routes/movies.js";
-import showtimeRoutes from "./routes/showtimes.js";
+import adminRoutes from "./modules/admin/admin.routes.js";
+import authRoutes from "./modules/auth/auth.routes.js";
+import bookingRoutes from "./modules/bookings/booking.routes.js";
+import movieRoutes from "./modules/movies/movie.routes.js";
+import showtimeRoutes from "./modules/showtimes/showtime.routes.js";
 
 dotenv.config();
 
@@ -34,9 +36,11 @@ app.get("/", (req, res) => {
   res.json({ message: "Beatrix Movie API is running" });
 });
 
+app.use("/api/auth", authRoutes);
 app.use("/api/movies", movieRoutes);
 app.use("/api/showtimes", showtimeRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.use((error, _req, res, _next) => {
   console.error(error);
