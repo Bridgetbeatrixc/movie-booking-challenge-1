@@ -6,6 +6,7 @@ Use this folder for login, register, protected route UI, and role-aware navigati
 
 ## Suggested Files
 
-- `pages/` - Login, register, and account pages.
+- `../../pages/` - route-level auth screens.
+- `api/` - Auth API calls.
 - `components/` - Auth forms, role guards, and reusable auth UI.
-- `services/` - Auth API calls and token/session helpers.
+- `storage/` - Token/session helpers.

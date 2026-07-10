@@ -1,6 +1,6 @@
 import { ticketPrice } from "../data/bookingOptions.js";
-import { formatRupiah } from "../../../shared/utils/currency.js";
-import { formatCurrency, formatShowDate, formatShowTime } from "../../../shared/utils/formatters.js";
+import { formatRupiah } from "../../../utils/currency.js";
+import { formatCurrency, formatShowDate, formatShowTime } from "../../../utils/formatters.js";
 
 export function BookingSummary(props) {
   if ("showtime" in props || "onContinue" in props) {

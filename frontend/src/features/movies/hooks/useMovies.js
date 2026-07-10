@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getMovies } from "../../../shared/api/api.js";
 import { movies as fallbackMovies } from "../data/movies.js";
+import { getMovies } from "../api/movieApi.js";
 
 function normalizeMovie(movie) {
   return {

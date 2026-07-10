@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { BookingHero } from "../../showtimes/components/BookingHero.jsx";
-import { BookingOptions } from "../../showtimes/components/BookingOptions.jsx";
-import { BookingSummary } from "../../showtimes/components/BookingSummary.jsx";
-import { SeatPicker } from "../../showtimes/components/SeatPicker.jsx";
-import { ticketPrice } from "../../showtimes/data/bookingOptions.js";
-import { defaultMovie } from "../../movies/data/movies.js";
-import { saveCheckout } from "../services/checkoutStorage.js";
-import { Footer } from "../../../shared/components/layout/Footer.jsx";
-import { Header } from "../../../shared/components/layout/Header.jsx";
-import { checkoutBooking, getOccupiedSeats, markBookingPaid } from "../../../shared/api/api.js";
+import { Footer } from "../components/layout/Footer.jsx";
+import { Header } from "../components/layout/Header.jsx";
+import { checkoutBooking, getOccupiedSeats, markBookingPaid } from "../features/bookings/api/bookingApi.js";
+import { saveCheckout } from "../features/bookings/storage/checkoutStorage.js";
+import { defaultMovie } from "../features/movies/data/movies.js";
+import { BookingHero } from "../features/showtimes/components/BookingHero.jsx";
+import { BookingOptions } from "../features/showtimes/components/BookingOptions.jsx";
+import { BookingSummary } from "../features/showtimes/components/BookingSummary.jsx";
+import { SeatPicker } from "../features/showtimes/components/SeatPicker.jsx";
+import { ticketPrice } from "../features/showtimes/data/bookingOptions.js";
 
 const defaultCinema = "Beatrix Movieplex - Central World";
 const defaultShowtime = "2026-06-21T13:30:00.000Z";

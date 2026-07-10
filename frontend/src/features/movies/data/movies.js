@@ -1,4 +1,4 @@
-import { asset } from "../../../shared/utils/assets.js";
+import { asset } from "../../../utils/assets.js";
 
 export { asset };
 

@@ -1,7 +1,7 @@
-import { Header } from "../../../shared/components/layout/Header.jsx";
-import { Footer } from "../../../shared/components/layout/Footer.jsx";
-import { asset } from "../../../shared/utils/assets.js";
-import { advanceSaleMovies, comingSoonMovies } from "../data/movies.js";
+import { Footer } from "../components/layout/Footer.jsx";
+import { Header } from "../components/layout/Header.jsx";
+import { advanceSaleMovies, comingSoonMovies } from "../features/movies/data/movies.js";
+import { asset } from "../utils/assets.js";
 
 export function HomePage({ movies, moviesError, moviesLoading, selectedMovie, setSelectedMovie }) {
   return (

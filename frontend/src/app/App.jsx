@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { BookingPage } from "../features/bookings/pages/BookingPage.jsx";
-import { PaymentPage } from "../features/bookings/pages/PaymentPage.jsx";
 import { defaultMovie, getMovieKey } from "../features/movies/data/movies.js";
 import { useMovies } from "../features/movies/hooks/useMovies.js";
-import { HomePage } from "../features/movies/pages/HomePage.jsx";
-import { useHashRoute } from "../shared/hooks/useHashRoute.js";
+import { useHashRoute } from "../hooks/useHashRoute.js";
+import { BookingPage } from "../pages/BookingPage.jsx";
+import { HomePage } from "../pages/HomePage.jsx";
+import { PaymentPage } from "../pages/PaymentPage.jsx";
 
 function getInitialMovie(movies) {
   const savedMovie = localStorage.getItem("selectedMovie");
