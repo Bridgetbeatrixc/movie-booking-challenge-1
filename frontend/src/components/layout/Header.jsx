@@ -35,6 +35,7 @@ function HomeNavigation() {
         </a>
         <a href="#movies">Movies</a>
         <a href="#coming-soon">Coming soon</a>
+        <a href="#admin">Admin</a>
         <a href="#footer">Contact</a>
       </nav>
     </>

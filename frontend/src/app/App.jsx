@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { defaultMovie, getMovieKey } from "../features/movies/data/movies.js";
 import { useMovies } from "../features/movies/hooks/useMovies.js";
 import { useHashRoute } from "../hooks/useHashRoute.js";
+import { AdminPage } from "../pages/AdminPage.jsx";
 import { HomePage } from "../pages/HomePage.jsx";
 import { MovieDetailPage } from "../pages/MovieDetailPage.jsx";
 import { PaymentPage } from "../pages/PaymentPage.jsx";
@@ -36,6 +37,10 @@ export default function App() {
 
   if (route === "payment") {
     return <PaymentPage />;
+  }
+
+  if (route === "admin") {
+    return <AdminPage movies={movies} moviesLoading={loading} />;
   }
 
   return (

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
 function getRouteFromHash() {
+  const hash = window.location.hash;
+
   if (window.location.hash === "#movie") {
     return "movie";
   }
@@ -11,6 +13,10 @@ function getRouteFromHash() {
 
   if (window.location.hash === "#payment") {
     return "payment";
+  }
+
+  if (hash.startsWith("#admin")) {
+    return "admin";
   }
 
   return "home";
@@ -24,7 +30,14 @@ export function useHashRoute() {
       const hash = window.location.hash;
       setRoute(getRouteFromHash());
 
-      if (hash === "#movie" || hash === "#booking" || hash === "#payment" || hash === "#" || hash === "") {
+      if (
+        hash === "#movie" ||
+        hash === "#booking" ||
+        hash === "#payment" ||
+        hash.startsWith("#admin") ||
+        hash === "#" ||
+        hash === ""
+      ) {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     }
