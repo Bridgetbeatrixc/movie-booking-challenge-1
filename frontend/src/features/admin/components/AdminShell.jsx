@@ -572,6 +572,7 @@ function ShowtimeTable({ showtimes, onEdit, onDelete }) {
             <th>Date</th>
             <th>Time</th>
             <th>Studio</th>
+            <th>Seats</th>
             <th>Price</th>
             <th>Action</th>
           </tr>
@@ -584,6 +585,7 @@ function ShowtimeTable({ showtimes, onEdit, onDelete }) {
                 <td>{showtime.date}</td>
                 <td>{showtime.time}</td>
                 <td>{showtime.studio}</td>
+                <td>{showtime.seatsSummary || `${showtime.bookedSeats?.length || 0} / ${48 - (showtime.bookedSeats?.length || 0)}`}</td>
                 <td>{showtime.price ? `Rp${Number(showtime.price).toLocaleString("id-ID")}` : "-"}</td>
                 <td>
                   <div className="admin-table-actions">
@@ -599,7 +601,7 @@ function ShowtimeTable({ showtimes, onEdit, onDelete }) {
             ))
           ) : (
             <tr>
-              <td colSpan="6" className="admin-muted">
+              <td colSpan="7" className="admin-muted">
                 No showtimes available.
               </td>
             </tr>
