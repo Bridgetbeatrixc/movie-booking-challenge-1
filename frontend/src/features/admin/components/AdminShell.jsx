@@ -1,9 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createMovie, updateMovie, deleteMovie } from "../../movies/api/movieApi.js";
+import { createShowtime, deleteShowtime, getShowtimes, updateShowtime } from "../../showtimes/api/showtimeApi.js";
 
 const adminTabs = [
   { id: "dashboard", hash: "#admin", label: "Dashboard", icon: "▦" },
   { id: "movies", hash: "#admin-movies", label: "Movies", icon: "🎬" },
+  { id: "showtimes", hash: "#admin-showtimes", label: "Showtimes", icon: "🕒" },
   { id: "bookings", hash: "#admin-bookings", label: "Bookings", icon: "🎟" },
   { id: "halls", hash: "#admin-halls", label: "Halls", icon: "▣" },
   { id: "reports", hash: "#admin-reports", label: "Reports", icon: "↗" }
@@ -61,6 +63,7 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
 
         {activeTab === "dashboard" ? <AdminDashboard bookings={sampleBookings} movies={movies} moviesLoading={moviesLoading} stats={stats} /> : null}
         {activeTab === "movies" ? <AdminMovies movies={movies} moviesLoading={moviesLoading} /> : null}
+        {activeTab === "showtimes" ? <AdminShowtimes movies={movies} /> : null}
         {activeTab === "bookings" ? <AdminBookings bookings={sampleBookings} /> : null}
         {activeTab === "halls" ? <AdminHalls halls={sampleHalls} /> : null}
         {activeTab === "reports" ? <AdminReports bookings={sampleBookings} stats={stats} /> : null}
@@ -73,6 +76,7 @@ function getActiveTab() {
   const hash = window.location.hash;
 
   if (hash === "#admin-movies") return "movies";
+  if (hash === "#admin-showtimes") return "showtimes";
   if (hash === "#admin-bookings") return "bookings";
   if (hash === "#admin-halls") return "halls";
   if (hash === "#admin-reports") return "reports";
@@ -335,6 +339,262 @@ function AdminBookings({ bookings }) {
     <AdminCard title="All bookings">
       <BookingTable bookings={bookings} />
     </AdminCard>
+  );
+}
+
+function AdminShowtimes({ movies }) {
+  const [showtimes, setShowtimes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingShowtime, setEditingShowtime] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [newShowtime, setNewShowtime] = useState({
+    movieId: "",
+    date: "",
+    time: "",
+    studio: "",
+    price: ""
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const loadShowtimes = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await getShowtimes();
+      setShowtimes(response.showtimes || []);
+    } catch (error) {
+      setError(error.message || "Unable to load showtimes.");
+      setShowtimes([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetShowtimeForm = () => {
+    setNewShowtime({ movieId: "", date: "", time: "", studio: "", price: "" });
+    setEditingShowtime(null);
+    setFormError("");
+  };
+
+  const startEditShowtime = (showtime) => {
+    setEditingShowtime(showtime);
+    setNewShowtime({
+      movieId: showtime.movieId || "",
+      date: showtime.date || "",
+      time: showtime.time || "",
+      studio: showtime.studio || "",
+      price: showtime.price != null ? String(showtime.price) : ""
+    });
+    setIsAdding(true);
+  };
+
+  const promptDeleteShowtime = (showtime) => {
+    setDeleteTarget(showtime);
+  };
+
+  const cancelDelete = () => {
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) {
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await deleteShowtime(deleteTarget.id);
+      setDeleteTarget(null);
+      await loadShowtimes();
+    } catch (error) {
+      window.alert(error.message || "Unable to delete showtime.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  useEffect(() => {
+    loadShowtimes();
+  }, []);
+
+  const handleFieldChange = (event) => {
+    const { name, value } = event.target;
+    setNewShowtime((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setFormError("");
+
+    const payload = {
+      movieId: newShowtime.movieId,
+      date: newShowtime.date,
+      time: newShowtime.time,
+      studio: newShowtime.studio,
+      price: Number(newShowtime.price)
+    };
+
+    try {
+      setSubmitting(true);
+      if (editingShowtime) {
+        await updateShowtime(editingShowtime.id, payload);
+      } else {
+        await createShowtime(payload);
+      }
+      setIsAdding(false);
+      resetShowtimeForm();
+      await loadShowtimes();
+    } catch (error) {
+      setFormError(error.message || "Unable to save showtime.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <AdminCard title="Showtime catalog">
+      <div className="admin-toolbar">
+        <input aria-label="Search showtimes" placeholder="Search showtimes" disabled />
+        <button type="button" onClick={() => setIsAdding(true)}>
+          Add showtime
+        </button>
+      </div>
+
+      {isAdding ? (
+        <div className="admin-modal-backdrop" role="dialog" aria-modal="true" onClick={() => { setIsAdding(false); resetShowtimeForm(); }}>
+          <div className="admin-modal" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="admin-modal-close" onClick={() => { setIsAdding(false); resetShowtimeForm(); }}>
+              ×
+            </button>
+            <div className="admin-modal-header">
+              <h3>Add new showtime</h3>
+              <p>Link this showtime to a movie and schedule its screening.</p>
+            </div>
+            <form className="admin-movie-form" onSubmit={handleSubmit}>
+              <div className="admin-form-grid">
+                <label>
+                  Movie
+                  <select name="movieId" value={newShowtime.movieId} onChange={handleFieldChange} required>
+                    <option value="">Select a movie</option>
+                    {movies.map((movie) => (
+                      <option key={movie.id || movie._id || movie.slug} value={movie.id || movie._id || movie.slug}>
+                        {movie.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Date
+                  <input name="date" type="date" value={newShowtime.date} onChange={handleFieldChange} required />
+                </label>
+                <label>
+                  Time
+                  <input name="time" type="time" value={newShowtime.time} onChange={handleFieldChange} required />
+                </label>
+                <label>
+                  Studio
+                  <input name="studio" value={newShowtime.studio} onChange={handleFieldChange} required />
+                </label>
+                <label>
+                  Price
+                  <input name="price" type="number" min="0" value={newShowtime.price} onChange={handleFieldChange} required />
+                </label>
+              </div>
+              <div className="admin-form-actions">
+                <button type="submit" disabled={submitting}>
+                  {submitting ? "Saving..." : "Save showtime"}
+                </button>
+                <button type="button" className="secondary" onClick={() => setIsAdding(false)} disabled={submitting}>
+                  Cancel
+                </button>
+              </div>
+              {formError ? <p className="admin-error">{formError}</p> : null}
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {deleteTarget ? (
+        <div className="admin-modal-backdrop" role="dialog" aria-modal="true" onClick={cancelDelete}>
+          <div className="admin-modal admin-confirmation-modal" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="admin-modal-close" onClick={cancelDelete}>
+              ×
+            </button>
+            <div className="admin-modal-header">
+              <h3>Delete showtime</h3>
+              <p>Are you sure you want to delete <strong>{deleteTarget.movie?.title || "this showtime"}</strong> on {deleteTarget.date} at {deleteTarget.time}?</p>
+            </div>
+            <div className="admin-form-actions">
+              <button type="button" onClick={confirmDelete} disabled={submitting}>
+                {submitting ? "Deleting..." : "Delete showtime"}
+              </button>
+              <button type="button" className="secondary" onClick={cancelDelete} disabled={submitting}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {loading ? (
+        <p className="admin-muted">Loading showtimes...</p>
+      ) : error ? (
+        <p className="admin-error">{error}</p>
+      ) : (
+        <ShowtimeTable showtimes={showtimes} onEdit={startEditShowtime} onDelete={promptDeleteShowtime} />
+      )}
+    </AdminCard>
+  );
+}
+
+function ShowtimeTable({ showtimes, onEdit, onDelete }) {
+  return (
+    <div className="admin-table-wrap">
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>Movie</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Studio</th>
+            <th>Price</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {showtimes.length ? (
+            showtimes.map((showtime) => (
+              <tr key={showtime.id}>
+                <td>{showtime.movie?.title || "Unknown movie"}</td>
+                <td>{showtime.date}</td>
+                <td>{showtime.time}</td>
+                <td>{showtime.studio}</td>
+                <td>{showtime.price ? `Rp${Number(showtime.price).toLocaleString("id-ID")}` : "-"}</td>
+                <td>
+                  <div className="admin-table-actions">
+                    <button type="button" onClick={() => onEdit?.(showtime)}>
+                      Edit
+                    </button>
+                    <button type="button" onClick={() => onDelete?.(showtime)}>
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="6" className="admin-muted">
+                No showtimes available.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

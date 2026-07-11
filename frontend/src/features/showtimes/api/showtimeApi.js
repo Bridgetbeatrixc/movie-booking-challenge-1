@@ -8,8 +8,14 @@ function isObjectId(value) {
   return objectIdPattern.test(String(value || ""));
 }
 
-async function requestJson(path) {
-  const response = await fetch(`${API_BASE_URL}${path}`);
+async function requestJson(path, options = {}) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    },
+    ...options
+  });
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
@@ -70,4 +76,36 @@ export async function fetchSeatAvailability(showtime) {
     bookedSeats: showtime.bookedSeats || [],
     availability: buildLocalSeatAvailability(showtime.bookedSeats || [])
   };
+}
+
+export function getShowtimes(params = {}) {
+  const search = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      search.set(key, value);
+    }
+  });
+
+  return requestJson(`/api/showtimes${search.toString() ? `?${search.toString()}` : ""}`);
+}
+
+export function createShowtime(showtimeData) {
+  return requestJson(`/api/showtimes`, {
+    method: "POST",
+    body: JSON.stringify(showtimeData)
+  });
+}
+
+export function updateShowtime(showtimeId, showtimeData) {
+  return requestJson(`/api/showtimes/${showtimeId}`, {
+    method: "PUT",
+    body: JSON.stringify(showtimeData)
+  });
+}
+
+export function deleteShowtime(showtimeId) {
+  return requestJson(`/api/showtimes/${showtimeId}`, {
+    method: "DELETE"
+  });
 }
