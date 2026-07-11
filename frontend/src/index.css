@@ -1097,6 +1097,10 @@ body {
   gap: 18px;
 }
 
+.admin-card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
 .admin-stats-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -1118,9 +1122,22 @@ body {
   padding: 22px;
 }
 
-.admin-card h2 {
-  margin: 0 0 18px;
+.admin-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.admin-card-heading h2 {
+  margin: 0;
   font-size: 20px;
+}
+
+.admin-card-actions {
+  display: flex;
+  gap: 12px;
 }
 
 .admin-stat-card {
@@ -1161,17 +1178,20 @@ body {
 }
 
 .admin-actions a,
-.admin-toolbar button {
+.admin-toolbar button,
+.admin-card-actions button {
   border: 1px solid rgba(96, 165, 250, 0.36);
   background: rgba(37, 99, 235, 0.18);
   padding: 12px 14px;
   color: #dbeafe;
   font-weight: 700;
   text-decoration: none;
+  border-radius: 18px;
 }
 
 .admin-actions a:hover,
-.admin-toolbar button:hover {
+.admin-toolbar button:hover,
+.admin-card-actions button:hover {
   transform: translateY(-1px);
   border-color: rgba(147, 197, 253, 0.75);
 }
@@ -1440,8 +1460,43 @@ body {
   padding: 18px;
 }
 
+.admin-mini-card {
+  padding: 18px;
+}
+
+.admin-mini-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.admin-mini-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-mini-card-actions button {
+  padding: 8px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 14px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+.admin-mini-card-actions button:first-child {
+  border-color: rgba(96, 165, 250, 0.4);
+}
+
+.admin-mini-card-actions button.danger {
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+}
+
 .admin-mini-card h3 {
-  margin: 8px 0 10px;
+  margin: 0 0 10px;
   font-size: 22px;
 }
 

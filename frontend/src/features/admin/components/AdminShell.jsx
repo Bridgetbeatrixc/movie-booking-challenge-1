@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createMovie, updateMovie, deleteMovie } from "../../movies/api/movieApi.js";
 import { createShowtime, deleteShowtime, getShowtimes, updateShowtime } from "../../showtimes/api/showtimeApi.js";
+import { showtimeCatalog } from "../../showtimes/data/showtimes.js";
 
 const adminTabs = [
   { id: "dashboard", hash: "#admin", label: "Dashboard", icon: "▦" },
@@ -367,8 +368,18 @@ function AdminShowtimes({ movies }) {
       const response = await getShowtimes();
       setShowtimes(response.showtimes || []);
     } catch (error) {
-      setError(error.message || "Unable to load showtimes.");
-      setShowtimes([]);
+      setError("Backend unavailable — using sample showtimes.");
+
+      const movieTitleByKey = new Map(
+        movies.map((movie) => [movie.slug || movie.id || movie._id, movie.title])
+      );
+
+      const sampleShowtimes = showtimeCatalog.map((showtime) => ({
+        ...showtime,
+        movie: { title: movieTitleByKey.get(showtime.movieKey) || showtime.movieKey }
+      }));
+
+      setShowtimes(sampleShowtimes);
     } finally {
       setLoading(false);
     }
@@ -541,10 +552,11 @@ function AdminShowtimes({ movies }) {
       ) : null}
       {loading ? (
         <p className="admin-muted">Loading showtimes...</p>
-      ) : error ? (
-        <p className="admin-error">{error}</p>
       ) : (
-        <ShowtimeTable showtimes={showtimes} onEdit={startEditShowtime} onDelete={promptDeleteShowtime} />
+        <>
+          {error ? <p className="admin-error">{error}</p> : null}
+          <ShowtimeTable showtimes={showtimes} onEdit={startEditShowtime} onDelete={promptDeleteShowtime} />
+        </>
       )}
     </AdminCard>
   );
@@ -599,18 +611,173 @@ function ShowtimeTable({ showtimes, onEdit, onDelete }) {
 }
 
 function AdminHalls({ halls }) {
+  const [isAdding, setIsAdding] = useState(false);
+  const [hallList, setHallList] = useState(halls);
+  const [newHall, setNewHall] = useState({
+    name: "",
+    type: "Regular",
+    seats: "",
+    status: "Open"
+  });
+  const [editingHallIndex, setEditingHallIndex] = useState(null);
+  const [deleteTargetIndex, setDeleteTargetIndex] = useState(null);
+  const [formError, setFormError] = useState("");
+
+  useEffect(() => {
+    setHallList(halls);
+  }, [halls]);
+
+  const resetHallForm = () => {
+    setNewHall({ name: "", type: "Regular", seats: "", status: "Open" });
+    setEditingHallIndex(null);
+    setFormError("");
+  };
+
+  const handleFieldChange = (event) => {
+    const { name, value } = event.target;
+    setNewHall((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const openEditHall = (index) => {
+    const hall = hallList[index];
+    setEditingHallIndex(index);
+    setNewHall({
+      name: hall.name,
+      type: hall.type,
+      seats: hall.seats,
+      status: hall.status
+    });
+    setIsAdding(true);
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    setFormError("");
+
+    if (!newHall.name.trim()) {
+      setFormError("Hall name is required.");
+      return;
+    }
+
+    if (!newHall.seats || Number(newHall.seats) < 1) {
+      setFormError("Seats must be a positive number.");
+      return;
+    }
+
+    const updatedHall = {
+      name: newHall.name.trim(),
+      type: newHall.type,
+      seats: Number(newHall.seats),
+      status: newHall.status
+    };
+
+    if (editingHallIndex !== null) {
+      setHallList((current) => current.map((hall, index) => (index === editingHallIndex ? updatedHall : hall)));
+    } else {
+      setHallList((current) => [...current, updatedHall]);
+    }
+
+    setIsAdding(false);
+    resetHallForm();
+  };
+
   return (
-    <AdminCard title="Cinema halls">
+    <AdminCard
+      title="Cinema halls"
+      actions={
+        <button type="button" onClick={() => setIsAdding(true)}>
+          Add studio
+        </button>
+      }
+    >
+      {isAdding ? (
+        <div className="admin-modal-backdrop" role="dialog" aria-modal="true" onClick={() => { setIsAdding(false); resetHallForm(); }}>
+          <div className="admin-modal" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="admin-modal-close" onClick={() => { setIsAdding(false); resetHallForm(); }}>
+              ×
+            </button>
+            <div className="admin-modal-header">
+              <h3>{editingHallIndex !== null ? "Edit studio" : "Add new studio"}</h3>
+              <p>Enter the studio details for the cinema hall.</p>
+            </div>
+            <form className="admin-movie-form" onSubmit={handleSubmit}>
+              <div className="admin-form-grid">
+                <label>
+                  Studio name
+                  <input name="name" value={newHall.name} onChange={handleFieldChange} required />
+                </label>
+                <label>
+                  Type
+                  <select name="type" value={newHall.type} onChange={handleFieldChange}>
+                    <option value="Regular">Regular</option>
+                    <option value="Premiere">Premiere</option>
+                    <option value="IMAX">IMAX</option>
+                    <option value="Horror">Horror</option>
+                  </select>
+                </label>
+                <label>
+                  Seats
+                  <input name="seats" type="number" min="1" value={newHall.seats} onChange={handleFieldChange} required />
+                </label>
+                <label>
+                  Status
+                  <select name="status" value={newHall.status} onChange={handleFieldChange}>
+                    <option value="Open">Open</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+                </label>
+              </div>
+              <div className="admin-form-actions">
+                <button type="submit">Save studio</button>
+                <button type="button" className="secondary" onClick={() => { setIsAdding(false); resetHallForm(); }}>
+                  Cancel
+                </button>
+              </div>
+              {formError ? <p className="admin-error">{formError}</p> : null}
+            </form>
+          </div>
+        </div>
+      ) : null}
+
       <div className="admin-card-grid">
-        {halls.map((hall) => (
-          <article className="admin-mini-card" key={hall.name}>
-            <span>{hall.type}</span>
+        {hallList.map((hall, index) => (
+          <article className="admin-mini-card" key={`${hall.name}-${index}`}>
+            <div className="admin-mini-card-header">
+              <span>{hall.type}</span>
+              <div className="admin-mini-card-actions">
+                <button type="button" onClick={() => openEditHall(index)}>Edit</button>
+                <button type="button" className="danger" onClick={() => setDeleteTargetIndex(index)}>Delete</button>
+              </div>
+            </div>
             <h3>{hall.name}</h3>
             <p>{hall.seats} seats</p>
             <strong>{hall.status}</strong>
           </article>
         ))}
       </div>
+
+      {deleteTargetIndex !== null ? (
+        <div className="admin-modal-backdrop" role="dialog" aria-modal="true" onClick={() => setDeleteTargetIndex(null)}>
+          <div className="admin-modal admin-confirmation-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h3>Delete studio?</h3>
+              <p>Are you sure you want to remove this studio? This action cannot be undone.</p>
+            </div>
+            <div className="admin-form-actions">
+              <button type="button" className="danger" onClick={() => {
+                setHallList((current) => current.filter((_, idx) => idx !== deleteTargetIndex));
+                setDeleteTargetIndex(null);
+              }}>
+                Delete
+              </button>
+              <button type="button" className="secondary" onClick={() => setDeleteTargetIndex(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </AdminCard>
   );
 }
@@ -633,10 +800,15 @@ function AdminReports({ bookings, stats }) {
   );
 }
 
-function AdminCard({ title, children }) {
+function AdminCard({ title, actions, children }) {
   return (
     <section className="admin-card">
-      <h2>{title}</h2>
+      {(title || actions) && (
+        <div className="admin-card-heading">
+          {title ? <h2>{title}</h2> : null}
+          {actions ? <div className="admin-card-actions">{actions}</div> : null}
+        </div>
+      )}
       {children}
     </section>
   );
