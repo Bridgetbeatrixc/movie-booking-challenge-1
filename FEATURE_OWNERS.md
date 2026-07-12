@@ -36,9 +36,10 @@ Scope:
 Suggested frontend files:
 
 - `frontend/src/features/auth`
-- `frontend/src/features/auth/pages`
 - `frontend/src/features/auth/components`
-- `frontend/src/features/auth/services`
+- `frontend/src/features/auth/api`
+- `frontend/src/features/auth/storage`
+- `frontend/src/pages`
 
 Current backend files:
 
@@ -68,7 +69,8 @@ Scope:
 Current frontend files:
 
 - `frontend/src/features/movies`
-- `frontend/src/features/movies/pages/HomePage.jsx`
+- `frontend/src/pages/HomePage.jsx`
+- `frontend/src/features/movies/api/movieApi.js`
 - `frontend/src/features/movies/data/movies.js`
 
 Current backend files:
@@ -95,12 +97,12 @@ Scope:
 
 Current frontend files:
 
-- `frontend/src/features/showtimes/pages/SeatSelectionPage.jsx`
+- `frontend/src/pages/SeatSelectionPage.jsx`
 - `frontend/src/features/showtimes/components/ShowtimeList.jsx`
 - `frontend/src/features/showtimes/components/SeatGrid.jsx`
 - `frontend/src/features/showtimes/components/SeatLegend.jsx`
 - `frontend/src/features/showtimes/components/BookingSummary.jsx`
-- `frontend/src/features/showtimes/services/showtimeApi.js`
+- `frontend/src/features/showtimes/api/showtimeApi.js`
 - `frontend/src/features/showtimes/data/showtimes.js`
 
 Current backend files:
@@ -192,6 +194,7 @@ Integration points:
 ## Naming and Folder Rules
 
 - Keep shared logic in `shared`, `utils`, or `services`.
+- Put route-level screens in `frontend/src/pages`.
 - Avoid putting all features into one large `App.jsx`.
 - Each feature should have a small `README.md` when the feature becomes large.
 - Before editing another owner's file, coordinate in the pull request or group chat.

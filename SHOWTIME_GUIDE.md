@@ -28,6 +28,7 @@ Main files:
 Endpoints:
 
 - `GET /api/movies/:movieId/showtimes`
+- `GET /api/showtimes`
 - `GET /api/showtimes/:id`
 - `GET /api/showtimes/:id/seats`
 - `POST /api/showtimes`
@@ -45,12 +46,12 @@ Seat layout:
 
 Main files:
 
-- `frontend/src/features/showtimes/pages/SeatSelectionPage.jsx`
+- `frontend/src/pages/SeatSelectionPage.jsx`
 - `frontend/src/features/showtimes/components/ShowtimeList.jsx`
 - `frontend/src/features/showtimes/components/SeatGrid.jsx`
 - `frontend/src/features/showtimes/components/SeatLegend.jsx`
 - `frontend/src/features/showtimes/components/BookingSummary.jsx`
-- `frontend/src/features/showtimes/services/showtimeApi.js`
+- `frontend/src/features/showtimes/api/showtimeApi.js`
 - `frontend/src/features/showtimes/data/showtimes.js`
 
 The frontend currently has local fallback data, so the feature can be demoed before MongoDB has showtime seed data.

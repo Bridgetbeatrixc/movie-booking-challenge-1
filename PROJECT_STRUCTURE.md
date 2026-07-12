@@ -1,11 +1,11 @@
-# Project structure
+# Project Structure
 
 This repository is split into two application folders:
 
 ```text
 movie-booking-challenge-1/
-├── backend/   # Express, MongoDB, booking API, ticket/email/PDF services
-└── frontend/  # React + Vite cinema booking UI
+|-- backend/   # Express, MongoDB, booking API, ticket/email/PDF services
+`-- frontend/  # React + Vite cinema booking UI
 ```
 
 ## Frontend
@@ -14,28 +14,26 @@ The frontend uses a route-first React structure:
 
 ```text
 frontend/src/
-├── app/          # App setup, route selection, top-level composition
-├── pages/        # Route-level screens
-├── features/     # Business/domain code grouped by feature
-│   ├── bookings/
-│   │   ├── api/
-│   │   ├── components/
-│   │   └── storage/
-│   ├── movies/
-│   │   ├── api/
-│   │   ├── components/
-│   │   ├── data/
-│   │   └── hooks/
-│   └── showtimes/
-│       ├── api/
-│       ├── components/
-│       └── data/
-├── components/   # Generic reusable UI
-├── hooks/        # Generic reusable hooks
-├── services/     # App-wide clients/services
-├── utils/        # Generic helpers
-├── main.jsx
-└── index.css
+|-- app/          # App setup, route selection, top-level composition
+|-- pages/        # Route-level screens
+|-- features/     # Business/domain code grouped by feature
+|   |-- bookings/
+|   |   |-- api/
+|   |   `-- storage/
+|   |-- movies/
+|   |   |-- api/
+|   |   |-- data/
+|   |   `-- hooks/
+|   `-- showtimes/
+|       |-- api/
+|       |-- components/
+|       `-- data/
+|-- components/   # Generic reusable UI
+|-- hooks/        # Generic reusable hooks
+|-- services/     # App-wide clients/services
+|-- utils/        # Generic helpers
+|-- main.jsx
+`-- index.css
 ```
 
 Guidelines:
@@ -52,17 +50,17 @@ The backend uses a module-first Express structure:
 
 ```text
 backend/src/
-├── config/    # Database and environment configuration
-├── data/      # Seed/sample data
-├── modules/   # API modules grouped by business area
-│   ├── admin/
-│   ├── auth/
-│   ├── bookings/
-│   ├── movies/
-│   └── showtimes/
-├── scripts/   # CLI/dev scripts
-├── shared/    # Cross-module middleware, services, and utilities
-└── server.js
+|-- config/    # Database and environment configuration
+|-- data/      # Seed/sample data
+|-- modules/   # API modules grouped by business area
+|   |-- admin/
+|   |-- auth/
+|   |-- bookings/
+|   |-- movies/
+|   `-- showtimes/
+|-- scripts/   # CLI/dev scripts
+|-- shared/    # Cross-module middleware, services, and utilities
+`-- server.js
 ```
 
 Guidelines:

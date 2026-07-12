@@ -69,12 +69,13 @@ If port `5173` is busy, Vite may use another port such as `5174`.
 
 - Open the frontend.
 - Pick a movie.
+- Use search, genre, status, or sort filters if needed.
 - Click `Choose seats`.
-- Pick a showtime.
-- Select available seats.
-- Review the booking summary.
+- Pick a showtime loaded from MongoDB when available.
+- Select available seats from the latest seat availability.
+- Review the showtime booking summary.
 
-The showtime frontend has local fallback data, so it can be demoed before MongoDB has showtime seed data.
+The backend seeds sample movies and showtimes when the related collections are empty. The showtime frontend still has local fallback data, so it can be demoed before MongoDB is connected.
 
 ## 6. Team Workflow
 

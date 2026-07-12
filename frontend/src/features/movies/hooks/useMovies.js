@@ -15,8 +15,31 @@ function normalizeMovie(movie) {
 
 export function useMovies() {
   const [movies, setMovies] = useState(fallbackMovies);
+  const [filters, setFilters] = useState({
+    search: "",
+    genre: "",
+    status: "",
+    sort: "status",
+    page: 1,
+    limit: 8
+  });
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 8,
+    total: fallbackMovies.length,
+    totalPages: 1
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 350);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [filters]);
 
   useEffect(() => {
     let active = true;
@@ -26,15 +49,26 @@ export function useMovies() {
       setError("");
 
       try {
-        const apiMovies = await getMovies();
+        const response = await getMovies(debouncedFilters);
+        const apiMovies = Array.isArray(response) ? response : response.movies || [];
 
         if (active && apiMovies.length) {
           setMovies(apiMovies.map(normalizeMovie));
+          setPagination(response.pagination || pagination);
+        } else if (active) {
+          setMovies([]);
+          setPagination(response.pagination || { ...pagination, total: 0, totalPages: 1 });
         }
       } catch (requestError) {
         if (active) {
           setError(requestError.message);
           setMovies(fallbackMovies);
+          setPagination({
+            page: 1,
+            limit: fallbackMovies.length,
+            total: fallbackMovies.length,
+            totalPages: 1
+          });
         }
       } finally {
         if (active) {
@@ -48,7 +82,15 @@ export function useMovies() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [debouncedFilters]);
 
-  return { movies, loading, error };
+  function updateFilters(nextFilters) {
+    setFilters((currentFilters) => ({
+      ...currentFilters,
+      ...nextFilters,
+      page: nextFilters.page || 1
+    }));
+  }
+
+  return { movies, loading, error, filters, pagination, setFilters: updateFilters };
 }

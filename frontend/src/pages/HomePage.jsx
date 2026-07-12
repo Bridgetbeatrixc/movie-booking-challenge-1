@@ -3,7 +3,30 @@ import { Header } from "../components/layout/Header.jsx";
 import { advanceSaleMovies, comingSoonMovies } from "../features/movies/data/movies.js";
 import { asset } from "../utils/assets.js";
 
-export function HomePage({ movies, moviesError, moviesLoading, selectedMovie, setSelectedMovie }) {
+const statusOptions = [
+  { label: "All status", value: "" },
+  { label: "Showing", value: "showing" },
+  { label: "Coming soon", value: "coming-soon" },
+  { label: "Advance sale", value: "advance-sale" }
+];
+
+const sortOptions = [
+  { label: "Featured", value: "status" },
+  { label: "Newest", value: "newest" },
+  { label: "Rating", value: "rating" },
+  { label: "Title", value: "title" }
+];
+
+export function HomePage({
+  movies,
+  moviesError,
+  moviesLoading,
+  movieFilters,
+  moviePagination,
+  selectedMovie,
+  setMovieFilters,
+  setSelectedMovie
+}) {
   return (
     <>
       <Header />
@@ -11,9 +34,12 @@ export function HomePage({ movies, moviesError, moviesLoading, selectedMovie, se
         <Hero />
         <Promos />
         <FeaturedMovies
+          filters={movieFilters}
           movies={movies}
           moviesError={moviesError}
           moviesLoading={moviesLoading}
+          pagination={moviePagination}
+          setFilters={setMovieFilters}
           selectedMovie={selectedMovie}
           setSelectedMovie={setSelectedMovie}
         />
@@ -120,7 +146,7 @@ function PromoCard({ cardClass, id, image, imageClass, text, title }) {
   );
 }
 
-function FeaturedMovies({ movies, moviesError, moviesLoading, selectedMovie, setSelectedMovie }) {
+function FeaturedMovies({ filters, movies, moviesError, moviesLoading, pagination, selectedMovie, setFilters, setSelectedMovie }) {
   return (
     <section id="movies" className="mx-auto max-w-7xl px-6 pb-12">
       <div className="mb-6 flex items-end justify-between gap-4">
@@ -130,40 +156,131 @@ function FeaturedMovies({ movies, moviesError, moviesLoading, selectedMovie, set
         </div>
         <span className="text-sm text-slate-400">{moviesLoading ? "Loading from MongoDB..." : "Pick one to book seats"}</span>
       </div>
+      <MovieControls filters={filters} loading={moviesLoading} setFilters={setFilters} />
       {moviesError ? (
         <p className="mb-4 rounded-lg border border-amber-400/30 bg-amber-950/40 p-3 text-sm text-amber-100">
           Using local sample movies because API is offline: {moviesError}
         </p>
       ) : null}
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {movies.map((movie) => (
-          <button
-            className={`movie-card overflow-hidden rounded-xl border bg-navy text-left ${
-              selectedMovie.title === movie.title ? "selected border-blue-400" : "border-slate-700"
-            }`}
-            key={movie.title}
-            onClick={() => setSelectedMovie(movie)}
-            type="button"
-          >
-            <img src={movie.poster} alt={movie.title} className="h-64 w-full object-cover object-top" />
-            <div className="p-4">
-              <h3 className="font-semibold">{movie.title}</h3>
-              <p className="mt-1 text-sm text-slate-400">
-                {movie.genres} / {movie.runtime} / Rating {movie.rating}
-              </p>
-            </div>
-          </button>
-        ))}
-      </div>
-      <div className="mt-7 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-blue-400/40 bg-blue-950/50 p-4">
-        <p>
-          Selected movie: <strong className="text-blue-200">{selectedMovie.title}</strong>
+      {movies.length ? (
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {movies.map((movie) => (
+            <button
+              className={`movie-card overflow-hidden rounded-xl border bg-navy text-left ${
+                selectedMovie.title === movie.title ? "selected border-blue-400" : "border-slate-700"
+              }`}
+              key={movie.id || movie._id || movie.title}
+              onClick={() => {
+                setSelectedMovie(movie);
+                window.location.hash = "movie";
+              }}
+              type="button"
+            >
+              <img src={movie.poster} alt={movie.title} className="h-64 w-full object-cover object-top" />
+              <div className="p-4">
+                <h3 className="font-semibold">{movie.title}</h3>
+                <p className="mt-1 text-sm text-slate-400">
+                  {movie.genres} / {movie.runtime} / Rating {movie.rating}
+                </p>
+                {movie.description ? <p className="mt-3 line-clamp-2 text-xs leading-5 text-slate-500">{movie.description}</p> : null}
+              </div>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className="rounded-lg border border-slate-700 bg-slate-900/40 p-5 text-sm text-slate-300">
+          No movies match the current filter.
         </p>
-        <a href="#booking" className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold hover:bg-blue-500">
-          Choose seats
-        </a>
-      </div>
+      )}
+      <MoviePagination loading={moviesLoading} pagination={pagination} setFilters={setFilters} />
     </section>
+  );
+}
+
+function MovieControls({ filters, loading, setFilters }) {
+  return (
+    <div className="mb-5 grid gap-3 rounded-xl border border-slate-700 bg-[#06152d] p-4 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+      <label className="text-xs font-semibold text-slate-400">
+        Search
+        <input
+          className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-400"
+          onChange={(event) => setFilters({ search: event.target.value })}
+          placeholder="Title or description"
+          type="search"
+          value={filters.search}
+        />
+      </label>
+      <label className="text-xs font-semibold text-slate-400">
+        Genre
+        <input
+          className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-400"
+          onChange={(event) => setFilters({ genre: event.target.value })}
+          placeholder="Horror, Sci-Fi..."
+          type="search"
+          value={filters.genre}
+        />
+      </label>
+      <label className="text-xs font-semibold text-slate-400">
+        Status
+        <select
+          className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-400"
+          onChange={(event) => setFilters({ status: event.target.value })}
+          value={filters.status}
+        >
+          {statusOptions.map((option) => (
+            <option key={option.value || "all"} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="text-xs font-semibold text-slate-400">
+        Sort
+        <select
+          className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-400"
+          onChange={(event) => setFilters({ sort: event.target.value })}
+          value={filters.sort}
+        >
+          {sortOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    </div>
+  );
+}
+
+function MoviePagination({ loading, pagination, setFilters }) {
+  if (!pagination || pagination.totalPages <= 1) {
+    return null;
+  }
+
+  return (
+    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-300">
+      <span>
+        Page {pagination.page} of {pagination.totalPages} / {pagination.total} movies
+      </span>
+      <div className="flex gap-2">
+        <button
+          className="rounded-lg border border-slate-600 px-4 py-2 disabled:cursor-not-allowed disabled:opacity-45"
+          disabled={loading || pagination.page <= 1}
+          onClick={() => setFilters({ page: pagination.page - 1 })}
+          type="button"
+        >
+          Previous
+        </button>
+        <button
+          className="rounded-lg border border-slate-600 px-4 py-2 disabled:cursor-not-allowed disabled:opacity-45"
+          disabled={loading || pagination.page >= pagination.totalPages}
+          onClick={() => setFilters({ page: pagination.page + 1 })}
+          type="button"
+        >
+          Next
+        </button>
+      </div>
+    </div>
   );
 }
 

@@ -13,11 +13,14 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
-const allowedOrigins = (
-  process.env.CLIENT_URL || "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
-)
-  .split(",")
-  .map((origin) => origin.trim());
+const defaultClientOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5174"
+];
+const envClientOrigins = (process.env.CLIENT_URL || "").split(",").map((origin) => origin.trim());
+const allowedOrigins = [...new Set([...defaultClientOrigins, ...envClientOrigins].filter(Boolean))];
 
 app.use(
   cors({

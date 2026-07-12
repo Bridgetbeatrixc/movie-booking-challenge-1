@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { defaultMovie, getMovieKey } from "../features/movies/data/movies.js";
 import { useMovies } from "../features/movies/hooks/useMovies.js";
 import { useHashRoute } from "../hooks/useHashRoute.js";
-import { BookingPage } from "../pages/BookingPage.jsx";
 import { AdminPage } from "../pages/AdminPage.jsx";
 import { HomePage } from "../pages/HomePage.jsx";
+import { MovieDetailPage } from "../pages/MovieDetailPage.jsx";
 import { PaymentPage } from "../pages/PaymentPage.jsx";
+import { SeatSelectionPage } from "../pages/SeatSelectionPage.jsx";
 
 function getInitialMovie(movies) {
   const savedMovie = localStorage.getItem("selectedMovie");
@@ -14,7 +15,7 @@ function getInitialMovie(movies) {
 
 export default function App() {
   const route = useHashRoute();
-  const { movies, loading, error } = useMovies();
+  const { filters, movies, loading, error, pagination, setFilters } = useMovies();
   const [selectedMovie, setSelectedMovie] = useState(() => getInitialMovie(movies));
 
   useEffect(() => {
@@ -27,7 +28,11 @@ export default function App() {
   }
 
   if (route === "booking") {
-    return <BookingPage selectedMovie={selectedMovie} setSelectedMovie={chooseMovie} />;
+    return <SeatSelectionPage selectedMovie={selectedMovie} setSelectedMovie={chooseMovie} />;
+  }
+
+  if (route === "movie") {
+    return <MovieDetailPage selectedMovie={selectedMovie} />;
   }
 
   if (route === "payment") {
@@ -43,6 +48,9 @@ export default function App() {
       movies={movies}
       moviesError={error}
       moviesLoading={loading}
+      movieFilters={filters}
+      moviePagination={pagination}
+      setMovieFilters={setFilters}
       selectedMovie={selectedMovie}
       setSelectedMovie={chooseMovie}
     />
