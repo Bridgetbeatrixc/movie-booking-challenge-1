@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { authenticate, requireAdmin } from "../auth/auth.middleware.js";
 import {
   createShowtime,
   deleteShowtime,
@@ -13,8 +14,8 @@ const router = Router();
 router.get("/", listShowtimes);
 router.get("/:id/seats", getShowtimeSeats);
 router.get("/:id", getShowtimeById);
-router.post("/", createShowtime);
-router.put("/:id", updateShowtime);
-router.delete("/:id", deleteShowtime);
+router.post("/", authenticate, requireAdmin, createShowtime);
+router.put("/:id", authenticate, requireAdmin, updateShowtime);
+router.delete("/:id", authenticate, requireAdmin, deleteShowtime);
 
 export default router;

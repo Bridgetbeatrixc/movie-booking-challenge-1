@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { defaultMovie, getMovieKey } from "../features/movies/data/movies.js";
 import { useMovies } from "../features/movies/hooks/useMovies.js";
-import { useHashRoute } from "../hooks/useHashRoute.js";
+import LoginPage from "../pages/LoginPage.jsx";
+import RegisterPage from "../pages/RegisterPage.jsx";
+import ProtectedRoute from "../features/auth/components/ProtectedRoute.jsx";
+import AdminRoute from "../features/auth/components/AdminRoute.jsx";
 import { AdminPage } from "../pages/AdminPage.jsx";
 import { HomePage } from "../pages/HomePage.jsx";
 import { MovieDetailPage } from "../pages/MovieDetailPage.jsx";
@@ -14,7 +18,6 @@ function getInitialMovie(movies) {
 }
 
 export default function App() {
-  const route = useHashRoute();
   const { filters, movies, loading, error, pagination, setFilters } = useMovies();
   const [selectedMovie, setSelectedMovie] = useState(() => getInitialMovie(movies));
 
@@ -27,32 +30,40 @@ export default function App() {
     localStorage.setItem("selectedMovie", getMovieKey(movie) || movie.title);
   }
 
-  if (route === "booking") {
-    return <SeatSelectionPage selectedMovie={selectedMovie} setSelectedMovie={chooseMovie} />;
-  }
-
-  if (route === "movie") {
-    return <MovieDetailPage selectedMovie={selectedMovie} />;
-  }
-
-  if (route === "payment") {
-    return <PaymentPage />;
-  }
-
-  if (route === "admin") {
-    return <AdminPage movies={movies} moviesLoading={loading} onMovieCreated={() => setFilters({})} />;
-  }
-
   return (
-    <HomePage
-      movies={movies}
-      moviesError={error}
-      moviesLoading={loading}
-      movieFilters={filters}
-      moviePagination={pagination}
-      setMovieFilters={setFilters}
-      selectedMovie={selectedMovie}
-      setSelectedMovie={chooseMovie}
-    />
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <HomePage
+              movies={movies}
+              moviesError={error}
+              moviesLoading={loading}
+              movieFilters={filters}
+              moviePagination={pagination}
+              setMovieFilters={setFilters}
+              selectedMovie={selectedMovie}
+              setSelectedMovie={chooseMovie}
+            />
+          }
+        />
+
+        <Route path="/movie" element={<MovieDetailPage selectedMovie={selectedMovie} />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route path="/booking" element={<SeatSelectionPage selectedMovie={selectedMovie} setSelectedMovie={chooseMovie} />} />
+          <Route path="/payment" element={<PaymentPage />} />
+        </Route>
+
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminPage movies={movies} moviesLoading={loading} onMovieCreated={() => setFilters({})} />} />
+        </Route>
+
+      </Routes>
+    </BrowserRouter>
   );
 }

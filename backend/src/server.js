@@ -7,6 +7,8 @@ import bookingRoutes from "./modules/bookings/booking.routes.js";
 import movieRoutes from "./modules/movies/movie.routes.js";
 import showtimeRoutes from "./modules/showtimes/showtime.routes.js";
 import authRoutes from "./modules/auth/auth.routes.js";
+import adminRoutes from "./modules/admin/admin.routes.js";
+import { authenticate, requireAdmin } from "./modules/auth/auth.middleware.js";
 import { seedMovies } from "./shared/services/seedMovies.js";
 
 dotenv.config();
@@ -47,6 +49,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/movies", movieRoutes);
 app.use("/api/showtimes", showtimeRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/admin", authenticate, requireAdmin, adminRoutes);
 
 app.use((req, res, next) => {
   const error = new Error(`Server endpoint not found - ${req.originalUrl}`);
@@ -76,7 +79,7 @@ app.use((error, req, res, next) => {
   res.status(status).json({
     message,
     details: error.details,
-    stack: process.env.NODE_ENV === "production" ? null : error.stack
+    stack: process.env.NODE_ENV !== "production" ? null : error.stack
   });
 });
 

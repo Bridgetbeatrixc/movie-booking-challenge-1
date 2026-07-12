@@ -5,8 +5,14 @@ const bookingSchema = new mongoose.Schema(
     movie: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Movie",
-      required: false
+        required: false
     },
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+        index: true
+      },
     movieTitle: {
       type: String,
       required: true,
@@ -21,8 +27,10 @@ const bookingSchema = new mongoose.Schema(
       default: "Beatrix Movieplex - Central World"
     },
     showtime: {
-      type: Date,
-      required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Showtime",
+      required: true,
+      index: true
     },
     seats: {
       type: [String],
