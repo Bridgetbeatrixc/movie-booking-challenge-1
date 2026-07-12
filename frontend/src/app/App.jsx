@@ -40,7 +40,7 @@ export default function App() {
   }
 
   if (route === "admin") {
-    return <AdminPage movies={movies} moviesLoading={loading} />;
+    return <AdminPage movies={movies} moviesLoading={loading} onMovieCreated={() => setFilters({})} />;
   }
 
   return (

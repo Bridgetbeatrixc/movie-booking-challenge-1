@@ -112,8 +112,22 @@ function validateShowtimePayload(body, { partial = false } = {}) {
   return payload;
 }
 
+function buildSeatStats(bookedSeats = [], layout = DEFAULT_SEAT_LAYOUT) {
+  const totalSeats = layout.rows.length * layout.seatsPerRow;
+  const bookedSeatsCount = Array.isArray(bookedSeats) ? bookedSeats.length : 0;
+  const availableSeats = Math.max(totalSeats - bookedSeatsCount, 0);
+
+  return {
+    totalSeats,
+    bookedSeatsCount,
+    availableSeats,
+    seatsSummary: `${bookedSeatsCount} / ${availableSeats}`
+  };
+}
+
 function formatShowtime(showtime) {
   const data = showtime.toObject();
+  const seatStats = buildSeatStats(data.bookedSeats);
 
   return {
     id: data._id,
@@ -124,6 +138,10 @@ function formatShowtime(showtime) {
     studio: data.studio,
     price: data.price,
     bookedSeats: data.bookedSeats,
+    bookedSeatsCount: seatStats.bookedSeatsCount,
+    availableSeats: seatStats.availableSeats,
+    seatsSummary: seatStats.seatsSummary,
+    totalSeats: seatStats.totalSeats,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt
   };
