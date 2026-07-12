@@ -4,6 +4,8 @@ import { BookingSummary } from "../features/showtimes/components/BookingSummary.
 import { SeatGrid } from "../features/showtimes/components/SeatGrid.jsx";
 import { ShowtimeList } from "../features/showtimes/components/ShowtimeList.jsx";
 import { fetchSeatAvailability, fetchShowtimesForMovie } from "../features/showtimes/api/showtimeApi.js";
+import { checkoutBooking } from "../features/bookings/api/bookingApi.js";
+import { saveCheckout } from "../features/bookings/storage/checkoutStorage.js";
 import { isPastShowtime } from "../utils/formatters.js";
 
 export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
@@ -15,6 +17,8 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
   const [seatError, setSeatError] = useState("");
   const [showtimeLoading, setShowtimeLoading] = useState(false);
   const [seatLoading, setSeatLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -111,9 +115,31 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
     setSelectedShowtime((currentShowtime) => (currentShowtime ? { ...currentShowtime } : currentShowtime));
   }
 
-  function continueBooking() {
-    const seats = selectedSeats.join(", ");
-    alert(`Booking summary ready for ${selectedMovie.title}: ${seats}`);
+  async function continueBooking() {
+    if (!selectedShowtime || selectedSeats.length === 0) {
+      return;
+    }
+
+    setIsCheckingOut(true);
+    setCheckoutError("");
+
+    try {
+      const result = await checkoutBooking({
+        movieId: selectedMovie._id || selectedMovie.id,
+        movieTitle: selectedMovie.title,
+        moviePoster: selectedMovie.poster,
+        cinema: `Beatrix Movieplex - ${selectedShowtime.studio}`,
+        showtime: `${selectedShowtime.date}T${selectedShowtime.time}:00`,
+        seats: selectedSeats
+      });
+
+      saveCheckout(result);
+      window.location.hash = "payment";
+    } catch (error) {
+      setCheckoutError(error.message || "Unable to create the QRIS payment.");
+    } finally {
+      setIsCheckingOut(false);
+    }
   }
 
   return (
@@ -143,6 +169,8 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
           />
           <BookingSummary
             movie={selectedMovie}
+            checkoutError={checkoutError}
+            isCheckingOut={isCheckingOut}
             onContinue={continueBooking}
             onReset={resetBooking}
             selectedSeats={selectedSeats}

@@ -70,7 +70,7 @@ function CheckoutBookingSummary({
   );
 }
 
-function ShowtimeBookingSummary({ movie, onContinue, onReset, selectedSeats, showtime }) {
+function ShowtimeBookingSummary({ checkoutError, isCheckingOut, movie, onContinue, onReset, selectedSeats, showtime }) {
   const selectedSeatsText = selectedSeats.length ? selectedSeats.join(", ") : "No seats selected";
   const total = selectedSeats.length * (showtime?.price || 0);
 
@@ -101,13 +101,17 @@ function ShowtimeBookingSummary({ movie, onContinue, onReset, selectedSeats, sho
         <span className="text-blue-300">{formatCurrency(total)}</span>
       </div>
 
+      {checkoutError ? (
+        <p className="mt-5 rounded-lg border border-red-400/30 bg-red-950/40 p-3 text-sm text-red-100">{checkoutError}</p>
+      ) : null}
+
       <button
         className="mt-6 w-full rounded-lg bg-blue-600 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
-        disabled={!showtime || selectedSeats.length === 0}
+        disabled={!showtime || selectedSeats.length === 0 || isCheckingOut}
         onClick={onContinue}
         type="button"
       >
-        Continue to Booking
+        {isCheckingOut ? "Creating QRIS payment..." : "Continue to QRIS Payment"}
       </button>
       <button
         className="mt-3 w-full rounded-lg border border-slate-600 py-3 text-sm text-slate-300 hover:bg-slate-800"
