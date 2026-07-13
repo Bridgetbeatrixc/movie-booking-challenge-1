@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getMovies } from "../api/movieApi.js";
+import { getMovieGenres, getMovies } from "../api/movieApi.js";
 
 function normalizeMovie(movie) {
   return {
@@ -31,6 +31,7 @@ export function useMovies() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [genres, setGenres] = useState([]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -83,6 +84,31 @@ export function useMovies() {
     };
   }, [debouncedFilters]);
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadGenres() {
+      try {
+        const response = await getMovieGenres();
+        const nextGenres = Array.isArray(response) ? response : response.genres || [];
+
+        if (active) {
+          setGenres(nextGenres.filter(Boolean).sort((a, b) => a.localeCompare(b)));
+        }
+      } catch {
+        if (active) {
+          setGenres([]);
+        }
+      }
+    }
+
+    loadGenres();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   function updateFilters(nextFilters) {
     setFilters((currentFilters) => ({
       ...currentFilters,
@@ -91,5 +117,5 @@ export function useMovies() {
     }));
   }
 
-  return { movies, loading, error, filters, pagination, setFilters: updateFilters };
+  return { movies, loading, error, filters, genres, pagination, setFilters: updateFilters };
 }

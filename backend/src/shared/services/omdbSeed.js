@@ -1,3 +1,5 @@
+import { getTrailerVideoIdByTitle } from "../../data/movieTrailers.js";
+
 const genrePools = {
   Action: ["Top Gun: Maverick", "John Wick: Chapter 4", "Mission: Impossible - Dead Reckoning Part One", "Furiosa: A Mad Max Saga", "Gladiator II", "The Batman", "Nobody", "The Northman"],
   Adventure: ["Dune: Part Two", "Avatar: The Way of Water", "The Fall Guy", "Kingdom of the Planet of the Apes", "Uncharted", "Jungle Cruise", "The Lost City", "Bullet Train"],
@@ -50,7 +52,7 @@ export async function fetchOmdbMovies(apiKey, perGenre = 5) {
     slug: `${slugify(movie.Title)}-${movie.imdbID.toLowerCase()}`,
     imdbId: movie.imdbID,
     poster: movie.Poster,
-    trailerVideoId: "",
+    trailerVideoId: getTrailerVideoIdByTitle(movie.Title),
     description: movie.Plot === "N/A" ? `${movie.Title} (${movie.Year})` : movie.Plot,
     genres: movie.Genre.split(", "),
     runtime: parseRuntime(movie.Runtime),

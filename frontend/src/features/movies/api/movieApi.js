@@ -12,6 +12,14 @@ export function getMovies(params = {}) {
   return apiRequest(`/api/movies${search.toString() ? `?${search.toString()}` : ""}`);
 }
 
+export function getMovieById(movieIdOrSlug) {
+  return apiRequest(`/api/movies/${encodeURIComponent(movieIdOrSlug)}`);
+}
+
+export function getMovieGenres() {
+  return apiRequest("/api/movies/genres");
+}
+
 export function createMovie(movieData) {
   return apiRequest(`/api/movies`, {
     method: "POST",

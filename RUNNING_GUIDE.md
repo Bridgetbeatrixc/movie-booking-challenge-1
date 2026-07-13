@@ -65,7 +65,18 @@ http://localhost:5173
 
 If port `5173` is busy, Vite may use another port such as `5174`.
 
-## 5. Current Demo Flow
+## 5. Seed Challenge Data
+
+Seed data is optional but recommended before demoing the movie and showtime flow.
+
+```bash
+cd backend
+npm run seed
+```
+
+If `OMDB_API_KEY` is available, the seed script imports movie catalog data from OMDb. If it is not available, the script still works by using local sample movies, then creates halls, stable showtimes, and demo accounts. `SEED_BASE_DATE` can be used to control the deterministic showtime calendar.
+
+## 6. Current Demo Flow
 
 - Open the frontend.
 - Pick a movie.
@@ -75,9 +86,9 @@ If port `5173` is busy, Vite may use another port such as `5174`.
 - Select available seats from the latest seat availability.
 - Review the showtime booking summary.
 
-The backend seeds sample movies and showtimes when the related collections are empty. The showtime frontend still has local fallback data, so it can be demoed before MongoDB is connected.
+Movie and showtime data are loaded from the backend API. Run `npm run seed` in the backend if the movie list or showtime list is empty.
 
-## 6. Team Workflow
+## 7. Team Workflow
 
 - Work in your own branch.
 - Keep feature code inside your feature folder or module.

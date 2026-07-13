@@ -149,8 +149,15 @@ export async function getMovieById(req, res, next) {
 
 export async function listMovieGenres(_req, res, next) {
   try {
-    const genres = await Movie.distinct("genres");
-    res.json(genres.filter(Boolean).sort((a, b) => a.localeCompare(b)));
+    const genres = await Movie.aggregate([
+      { $unwind: "$genres" },
+      { $match: { genres: { $type: "string", $ne: "" } } },
+      { $group: { _id: "$genres" } },
+      { $sort: { _id: 1 } },
+      { $project: { _id: 0, genre: "$_id" } }
+    ]);
+
+    res.json(genres.map((item) => item.genre));
   } catch (error) {
     next(error);
   }

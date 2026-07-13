@@ -1,9 +1,11 @@
+import { useEffect, useState } from "react";
 import { Footer } from "../components/layout/Footer.jsx";
 import { Header } from "../components/layout/Header.jsx";
+import { getMovieById } from "../features/movies/api/movieApi.js";
 import { asset } from "../features/movies/data/movies.js";
 import { formatRupiah } from "../utils/currency.js";
 
-function getGenres(movie) {
+function getGenres(movie = {}) {
   return Array.isArray(movie.genres) ? movie.genres.join(" / ") : movie.genres;
 }
 
@@ -15,17 +17,58 @@ const trailerVideoIds = {
   "the-nun": "pzD9zGcUNrw"
 };
 
-function getTrailerVideoId(movie) {
+function getTrailerVideoId(movie = {}) {
   const movieKey = movie.key || movie.slug || "";
   return movie.trailerVideoId || trailerVideoIds[movieKey] || "";
 }
 
-export function MovieDetailPage({ selectedMovie }) {
-  const movie = selectedMovie;
+export function MovieDetailPage({ movieKey, selectedMovie, setSelectedMovie }) {
+  const [movie, setMovie] = useState(selectedMovie);
+  const [loading, setLoading] = useState(Boolean(movieKey));
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadMovieDetail() {
+      if (!movieKey) {
+        setMovie(selectedMovie);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await getMovieById(movieKey);
+        if (active) {
+          setMovie(response);
+          setSelectedMovie?.(response);
+        }
+      } catch (requestError) {
+        if (active) {
+          setMovie(selectedMovie);
+          setError(requestError.message);
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadMovieDetail();
+
+    return () => {
+      active = false;
+    };
+  }, [movieKey]);
+
   const genres = getGenres(movie);
   const trailerVideoId = getTrailerVideoId(movie);
   const trailerUrl = trailerVideoId
-    ? `https://www.youtube.com/embed/${trailerVideoId}?autoplay=1&mute=1&controls=1&playsinline=1&rel=0&loop=1&playlist=${trailerVideoId}`
+    ? `https://www.youtube.com/embed/${trailerVideoId}?autoplay=1&mute=0&controls=1&playsinline=1&rel=0&loop=1&playlist=${trailerVideoId}&enablejsapi=1`
     : "";
 
   return (
@@ -36,7 +79,7 @@ export function MovieDetailPage({ selectedMovie }) {
           <div className="movie-trailer-frame" aria-label={`${movie.title} trailer preview`}>
             {trailerUrl ? (
               <iframe
-                allow="autoplay; encrypted-media; picture-in-picture"
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 allowFullScreen
                 className="movie-trailer-video"
                 src={trailerUrl}
@@ -74,6 +117,12 @@ export function MovieDetailPage({ selectedMovie }) {
           <article className="min-w-0">
             <p className="text-sm font-semibold tracking-[.25em] text-blue-300">MOVIE DETAIL</p>
             <h2 className="mt-3 text-4xl font-semibold leading-tight">{movie.title}</h2>
+            {loading ? <p className="mt-3 text-sm text-blue-200">Loading movie detail from MongoDB...</p> : null}
+            {error ? (
+              <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-950/40 p-3 text-sm text-amber-100">
+                Movie detail could not be refreshed from the API: {error}
+              </p>
+            ) : null}
             <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-300">
               {genres ? <span className="rounded bg-slate-800 px-3 py-1">{genres}</span> : null}
               {movie.runtime ? <span className="rounded bg-slate-800 px-3 py-1">{movie.runtime}</span> : null}

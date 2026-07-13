@@ -1,3 +1,5 @@
+import { getTrailerVideoIdByTitle } from "./movieTrailers.js";
+
 const legacyMovies = [
   {
     title: "The Twilight Saga: Breaking Dawn - Part 2",
@@ -99,7 +101,7 @@ const currentMovies = currentMovieSeeds.map(([title, genre, secondaryGenre, year
   return {
     title, shortTitle: title, slug,
     poster: posterDataUrl(title),
-    trailerVideoId: "dQw4w9WgXcQ",
+    trailerVideoId: getTrailerVideoIdByTitle(title),
     description: `${title} is a recent Beatrix Movie release blending ${genre.toLowerCase()} and ${secondaryGenre.toLowerCase()} for a memorable cinema experience.`,
     genres: [genre, secondaryGenre], runtime: "1h 45m", rating, year,
     status: year === 2026 ? "advance-sale" : "showing", price: 35000
