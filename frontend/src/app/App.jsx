@@ -11,6 +11,7 @@ import AdminLoginPage from "../pages/AdminLoginPage.jsx";
 import RegisterPage from "../pages/RegisterPage.jsx";
 import { MovieDetailPage } from "../pages/MovieDetailPage.jsx";
 import { PaymentPage } from "../pages/PaymentPage.jsx";
+import { MyBookingsPage } from "../pages/MyBookingsPage.jsx";
 import { SeatSelectionPage } from "../pages/SeatSelectionPage.jsx";
 
 function getInitialMovie(movies) {
@@ -26,6 +27,12 @@ function AdminOnly({ children }) {
   if (role !== "admin") return <Navigate to="/" replace />;
 
   return children;
+}
+
+function AuthOnly({ children }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return <div className="loading-state">Checking authentication credentials...</div>;
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
 export default function App() {
@@ -44,7 +51,7 @@ export default function App() {
   }
 
   const hashPath = location.hash ? location.hash.replace(/^#/, '') : '';
-  const pathRoute = { "/movie": "movie", "/booking": "booking", "/payment": "payment", "/admin": "admin" }[location.pathname];
+  const pathRoute = { "/movie": "movie", "/booking": "booking", "/payment": "payment", "/admin": "admin", "/my-bookings": "my-bookings" }[location.pathname];
   const activeRoute = route === "home" ? pathRoute || "home" : route;
 
   if (location.pathname === "/login" || hashPath === "/login" || hashPath === "login") {
@@ -60,7 +67,7 @@ export default function App() {
   }
 
   if (activeRoute === "booking") {
-    return <SeatSelectionPage selectedMovie={selectedMovie} setSelectedMovie={chooseMovie} />;
+    return <AuthOnly><SeatSelectionPage selectedMovie={selectedMovie} setSelectedMovie={chooseMovie} /></AuthOnly>;
   }
 
   if (activeRoute === "movie") {
@@ -68,7 +75,11 @@ export default function App() {
   }
 
   if (activeRoute === "payment") {
-    return <PaymentPage />;
+    return <AuthOnly><PaymentPage /></AuthOnly>;
+  }
+
+  if (activeRoute === "my-bookings") {
+    return <AuthOnly><MyBookingsPage /></AuthOnly>;
   }
 
   if (activeRoute === "admin") {
