@@ -20,6 +20,7 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
   const { logout } = useAuth();
   const activeTab = getActiveTab();
 
+  const [showtimesState, setShowtimesState] = useState([]);
   const [bookingsState, setBookingsState] = useState([]);
   const [hallsState, setHallsState] = useState([]);
   const [dbConnected, setDbConnected] = useState(false);
@@ -29,8 +30,8 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
   const [localMoviesLoading, setLocalMoviesLoading] = useState(!!moviesLoading);
 
   const stats = useMemo(
-    () => (dashboardStats ? buildBackendStats(dashboardStats) : buildStats(localMovies, bookingsState)),
-    [dashboardStats, localMovies, bookingsState]
+    () => (dashboardStats ? buildBackendStats(dashboardStats, showtimesState) : buildStats(localMovies, bookingsState, showtimesState)),
+    [dashboardStats, localMovies, bookingsState, showtimesState]
   );
 
   useEffect(() => {
@@ -63,6 +64,18 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
     }
   };
 
+  const reloadShowtimes = async () => {
+    try {
+      const res = await getShowtimes();
+      const list = Array.isArray(res?.showtimes) ? res.showtimes : [];
+      setShowtimesState(list);
+      return list;
+    } catch (err) {
+      setShowtimesState([]);
+      return [];
+    }
+  };
+
   const handleSignOut = async () => {
     await logout();
     navigate('/login', { replace: true });
@@ -86,10 +99,10 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
         setBookingsState([]);
       })
       .finally(() => {
-        getHalls()
-          .then((res) => {
-            if (Array.isArray(res) && res.length > 0) {
-              setHallsState(res);
+        Promise.all([getHalls(), reloadShowtimes()])
+          .then(([hallsRes]) => {
+            if (Array.isArray(hallsRes) && hallsRes.length > 0) {
+              setHallsState(hallsRes);
               connected = true;
             }
           })
@@ -142,7 +155,7 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
         </header>
           {activeTab === "dashboard" ? <AdminDashboard bookings={bookingsState} movies={localMovies} moviesLoading={localMoviesLoading} stats={stats} /> : null}
           {activeTab === "movies" ? <AdminMovies movies={localMovies} moviesLoading={localMoviesLoading} onMovieCreated={reloadMovies} /> : null}
-          {activeTab === "showtimes" ? <AdminShowtimes movies={localMovies} /> : null}
+          {activeTab === "showtimes" ? <AdminShowtimes movies={localMovies} halls={hallsState} /> : null}
           {activeTab === "bookings" ? <AdminBookings bookings={bookingsState} /> : null}
           {activeTab === "halls" ? <AdminHalls halls={hallsState} reloadHalls={reloadHalls} /> : null}
           {activeTab === "reports" ? <AdminReports bookings={bookingsState} stats={stats} /> : null}
@@ -163,21 +176,21 @@ function getActiveTab() {
   return "dashboard";
 }
 
-function buildStats(movies, bookings) {
+function buildStats(movies, bookings, showtimes = []) {
   const paidBookings = bookings.filter((booking) => booking.status === "paid");
 
   return [
     { label: "Movies", value: movies.length || 5, tone: "blue" },
-    { label: "Bookings", value: bookings.length, tone: "cyan" },
-    { label: "Paid Orders", value: paidBookings.length, tone: "green" },
+    { label: "Showtimes", value: showtimes.length, tone: "cyan" },
+    { label: "Bookings", value: bookings.length, tone: "green" },
     { label: "Revenue", value: formatRupiah(paidBookings.reduce((sum, booking) => sum + booking.total, 0)), tone: "gold" }
   ];
 }
 
-function buildBackendStats(stats) {
+function buildBackendStats(stats, showtimes = []) {
   return [
     { label: "Movies", value: stats.movies || 0, tone: "blue" },
-    { label: "Showtimes", value: stats.showtimes || 0, tone: "cyan" },
+    { label: "Showtimes", value: showtimes.length || stats.showtimes || 0, tone: "cyan" },
     { label: "Bookings", value: stats.bookings || 0, tone: "green" },
     { label: "Users", value: stats.users || 0, tone: "gold" }
   ];
@@ -502,7 +515,7 @@ function AdminBookings({ bookings }) {
   );
 }
 
-function AdminShowtimes({ movies }) {
+function AdminShowtimes({ movies, halls = [] }) {
   const [showtimes, setShowtimes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -584,7 +597,19 @@ function AdminShowtimes({ movies }) {
     loadShowtimes();
   }, []);
 
-  const availableHalls = Array.from(new Set(showtimes.map((s) => s.studio).filter(Boolean)));
+  const hallOptions = useMemo(() => {
+    const hallNames = (Array.isArray(halls) ? halls : [])
+      .map((hall) => hall?.name)
+      .filter(Boolean);
+
+    const showtimeHallNames = showtimes
+      .map((showtime) => showtime?.studio)
+      .filter(Boolean);
+
+    return Array.from(new Set([...hallNames, ...showtimeHallNames]));
+  }, [halls, showtimes]);
+
+  const availableHalls = hallOptions;
 
   const filteredShowtimes = showtimes.filter((s) => {
     if (filterMovie) {
@@ -705,7 +730,14 @@ function AdminShowtimes({ movies }) {
                 </label>
                 <label>
                   Studio
-                  <input name="studio" value={newShowtime.studio} onChange={handleFieldChange} required />
+                  <select name="studio" value={newShowtime.studio} onChange={handleFieldChange} required>
+                    <option value="">Select a studio</option>
+                    {availableHalls.map((hallName) => (
+                      <option key={hallName} value={hallName}>
+                        {hallName}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label>
                   Price
