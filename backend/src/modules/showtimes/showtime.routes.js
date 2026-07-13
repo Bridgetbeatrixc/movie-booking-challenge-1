@@ -7,14 +7,15 @@ import {
   listShowtimes,
   updateShowtime
 } from "./showtime.controller.js";
+import { authenticate, requireAdmin } from "../auth/auth.middleware.js";
 
 const router = Router();
 
 router.get("/", listShowtimes);
 router.get("/:id/seats", getShowtimeSeats);
 router.get("/:id", getShowtimeById);
-router.post("/", createShowtime);
-router.put("/:id", updateShowtime);
-router.delete("/:id", deleteShowtime);
+router.post("/", authenticate, requireAdmin, createShowtime);
+router.put("/:id", authenticate, requireAdmin, updateShowtime);
+router.delete("/:id", authenticate, requireAdmin, deleteShowtime);
 
 export default router;

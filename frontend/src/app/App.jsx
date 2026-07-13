@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { defaultMovie, getMovieKey } from "../features/movies/data/movies.js";
 import { useMovies } from "../features/movies/hooks/useMovies.js";
 import { useHashRoute } from "../hooks/useHashRoute.js";
+import { useAuth } from "../features/auth/AuthContext.jsx";
 import { AdminPage } from "../pages/AdminPage.jsx";
 import { HomePage } from "../pages/HomePage.jsx";
 import LoginPage from "../pages/LoginPage.jsx";
@@ -15,6 +16,16 @@ import { SeatSelectionPage } from "../pages/SeatSelectionPage.jsx";
 function getInitialMovie(movies) {
   const savedMovie = localStorage.getItem("selectedMovie");
   return movies.find((movie) => getMovieKey(movie) === savedMovie || movie.title === savedMovie) || defaultMovie;
+}
+
+function AdminOnly({ children }) {
+  const { isAuthenticated, isLoading, role } = useAuth();
+
+  if (isLoading) return <div className="loading-state">Verifying admin authorization...</div>;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (role !== "admin") return <Navigate to="/" replace />;
+
+  return children;
 }
 
 export default function App() {
@@ -33,6 +44,8 @@ export default function App() {
   }
 
   const hashPath = location.hash ? location.hash.replace(/^#/, '') : '';
+  const pathRoute = { "/movie": "movie", "/booking": "booking", "/payment": "payment", "/admin": "admin" }[location.pathname];
+  const activeRoute = route === "home" ? pathRoute || "home" : route;
 
   if (location.pathname === "/login" || hashPath === "/login" || hashPath === "login") {
     return <LoginPage />;
@@ -46,20 +59,24 @@ export default function App() {
     return <RegisterPage />;
   }
 
-  if (route === "booking") {
+  if (activeRoute === "booking") {
     return <SeatSelectionPage selectedMovie={selectedMovie} setSelectedMovie={chooseMovie} />;
   }
 
-  if (route === "movie") {
+  if (activeRoute === "movie") {
     return <MovieDetailPage selectedMovie={selectedMovie} />;
   }
 
-  if (route === "payment") {
+  if (activeRoute === "payment") {
     return <PaymentPage />;
   }
 
-  if (route === "admin") {
-    return <AdminPage movies={movies} moviesLoading={loading} onMovieCreated={() => setFilters({})} />;
+  if (activeRoute === "admin") {
+    return (
+      <AdminOnly>
+        <AdminPage movies={movies} moviesLoading={loading} onMovieCreated={() => setFilters({})} />
+      </AdminOnly>
+    );
   }
 
   return (

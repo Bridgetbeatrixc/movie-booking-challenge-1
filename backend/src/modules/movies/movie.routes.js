@@ -8,6 +8,7 @@ import {
   listMovies,
   updateMovie
 } from "./movie.controller.js";
+import { authenticate, requireAdmin } from "../auth/auth.middleware.js";
 
 const router = Router();
 
@@ -15,8 +16,8 @@ router.get("/:movieId/showtimes", listShowtimesByMovie);
 router.get("/", listMovies);
 router.get("/genres", listMovieGenres);
 router.get("/:id", getMovieById);
-router.post("/", createMovie);
-router.put("/:id", updateMovie);
-router.delete("/:id", deleteMovie);
+router.post("/", authenticate, requireAdmin, createMovie);
+router.put("/:id", authenticate, requireAdmin, updateMovie);
+router.delete("/:id", authenticate, requireAdmin, deleteMovie);
 
 export default router;
