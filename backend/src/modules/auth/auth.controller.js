@@ -53,7 +53,11 @@ export async function login(req, res, next) {
 
     if (user && (await user.matchPassword(password))) {
       const token = jwt.sign(
-        { userId: user._id, role: user.role },
+        {
+          userId: user._id.toString(),
+          email: user.email,
+          role: user.role
+        },
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
       );
