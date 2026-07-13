@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext.jsx";
-import { createMovie, updateMovie, deleteMovie } from "../../movies/api/movieApi.js";
+import { createMovie, updateMovie, deleteMovie, getMovies } from "../../movies/api/movieApi.js";
 import { createShowtime, deleteShowtime, getShowtimes, updateShowtime } from "../../showtimes/api/showtimeApi.js";
+import { getBookings } from "../../bookings/api/bookingApi.js";
+import { getHalls, createHall, updateHall, deleteHall } from "../../halls/api/hallApi.js";
 import { showtimeCatalog } from "../../showtimes/data/showtimes.js";
 
 const adminTabs = [
@@ -30,12 +32,69 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const activeTab = getActiveTab();
-  const stats = useMemo(() => buildStats(movies, sampleBookings), [movies]);
+
+  const [bookingsState, setBookingsState] = useState(sampleBookings);
+  const [hallsState, setHallsState] = useState(sampleHalls);
+  const [dbConnected, setDbConnected] = useState(false);
+
+  const [localMovies, setLocalMovies] = useState(movies || []);
+  const [localMoviesLoading, setLocalMoviesLoading] = useState(!!moviesLoading);
+
+  const stats = useMemo(() => buildStats(localMovies, bookingsState), [localMovies, bookingsState]);
+
+  useEffect(() => {
+    setLocalMovies(movies || []);
+    setLocalMoviesLoading(!!moviesLoading);
+  }, [movies, moviesLoading]);
+
+  const reloadMovies = async () => {
+    setLocalMoviesLoading(true);
+    try {
+      const res = await getMovies();
+      // API may return { movies: [...] } or array
+      const list = Array.isArray(res) ? res : res?.movies || [];
+      setLocalMovies(list);
+    } catch (err) {
+      // keep existing localMovies on error
+    } finally {
+      setLocalMoviesLoading(false);
+    }
+  };
 
   const handleSignOut = async () => {
     await logout();
     navigate('/login', { replace: true });
   };
+
+  useEffect(() => {
+    let connected = false;
+
+    getBookings()
+      .then((res) => {
+        if (Array.isArray(res) && res.length > 0) {
+          setBookingsState(res);
+          connected = true;
+        }
+      })
+      .catch(() => {
+        // keep sample bookings
+      })
+      .finally(() => {
+        getHalls()
+          .then((res) => {
+            if (Array.isArray(res) && res.length > 0) {
+              setHallsState(res);
+              connected = true;
+            }
+          })
+          .catch(() => {
+            // keep sample halls
+          })
+          .finally(() => {
+            setDbConnected(connected);
+          });
+      });
+  }, []);
 
   return (
     <div className="admin-page min-h-screen">
@@ -68,17 +127,19 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
             <p>ADMINISTRATION</p>
             <h1>{adminTabs.find((tab) => tab.id === activeTab)?.label || "Dashboard"}</h1>
           </div>
-          <button type="button" className="admin-status admin-signout" onClick={handleSignOut}>
-            Sign out
-          </button>
+            <div className="admin-topbar-meta">
+              <span className={`admin-db ${dbConnected ? "connected" : "fallback"}`}>{dbConnected ? "DB Connected" : "Using sample data"}</span>
+              <button type="button" className="admin-status admin-signout" onClick={handleSignOut}>
+                Sign out
+              </button>
+            </div>
         </header>
-
-        {activeTab === "dashboard" ? <AdminDashboard bookings={sampleBookings} movies={movies} moviesLoading={moviesLoading} stats={stats} /> : null}
-        {activeTab === "movies" ? <AdminMovies movies={movies} moviesLoading={moviesLoading} /> : null}
-        {activeTab === "showtimes" ? <AdminShowtimes movies={movies} /> : null}
-        {activeTab === "bookings" ? <AdminBookings bookings={sampleBookings} /> : null}
-        {activeTab === "halls" ? <AdminHalls halls={sampleHalls} /> : null}
-        {activeTab === "reports" ? <AdminReports bookings={sampleBookings} stats={stats} /> : null}
+          {activeTab === "dashboard" ? <AdminDashboard bookings={bookingsState} movies={localMovies} moviesLoading={localMoviesLoading} stats={stats} /> : null}
+          {activeTab === "movies" ? <AdminMovies movies={localMovies} moviesLoading={localMoviesLoading} onMovieCreated={reloadMovies} /> : null}
+          {activeTab === "showtimes" ? <AdminShowtimes movies={localMovies} /> : null}
+          {activeTab === "bookings" ? <AdminBookings bookings={bookingsState} /> : null}
+          {activeTab === "halls" ? <AdminHalls halls={hallsState} /> : null}
+          {activeTab === "reports" ? <AdminReports bookings={bookingsState} stats={stats} /> : null}
       </main>
     </div>
   );
@@ -739,7 +800,7 @@ function AdminHalls({ halls }) {
     setIsAdding(true);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setFormError("");
 
@@ -760,14 +821,43 @@ function AdminHalls({ halls }) {
       status: newHall.status
     };
 
-    if (editingHallIndex !== null) {
-      setHallList((current) => current.map((hall, index) => (index === editingHallIndex ? updatedHall : hall)));
-    } else {
-      setHallList((current) => [...current, updatedHall]);
-    }
-
     setIsAdding(false);
-    resetHallForm();
+
+    try {
+      if (editingHallIndex !== null) {
+        const existing = hallList[editingHallIndex];
+        const id = existing?._id || existing?.id;
+        if (id) {
+          await updateHall(id, updatedHall);
+          const refreshed = await getHalls();
+          const list = Array.isArray(refreshed) ? refreshed : refreshed?.halls || [];
+          if (list.length) setHallList(list);
+          else setHallList((current) => current.map((hall, index) => (index === editingHallIndex ? { ...hall, ...updatedHall } : hall)));
+        } else {
+          // no backend id, try creating instead
+          await createHall(updatedHall);
+          const refreshed = await getHalls();
+          const list = Array.isArray(refreshed) ? refreshed : refreshed?.halls || [];
+          if (list.length) setHallList(list);
+          else setHallList((current) => current.map((hall, index) => (index === editingHallIndex ? updatedHall : hall)));
+        }
+      } else {
+        await createHall(updatedHall);
+        const refreshed = await getHalls();
+        const list = Array.isArray(refreshed) ? refreshed : refreshed?.halls || [];
+        if (list.length) setHallList(list);
+        else setHallList((current) => [...current, updatedHall]);
+      }
+    } catch (err) {
+      // backend unavailable or error — fallback to local update
+      if (editingHallIndex !== null) {
+        setHallList((current) => current.map((hall, index) => (index === editingHallIndex ? updatedHall : hall)));
+      } else {
+        setHallList((current) => [...current, updatedHall]);
+      }
+    } finally {
+      resetHallForm();
+    }
   };
 
   return (
@@ -854,10 +944,29 @@ function AdminHalls({ halls }) {
               <p>Are you sure you want to remove this studio? This action cannot be undone.</p>
             </div>
             <div className="admin-form-actions">
-              <button type="button" className="danger" onClick={() => {
-                setHallList((current) => current.filter((_, idx) => idx !== deleteTargetIndex));
-                setDeleteTargetIndex(null);
-              }}>
+              <button
+                type="button"
+                className="danger"
+                onClick={async () => {
+                  try {
+                    const target = hallList[deleteTargetIndex];
+                    const id = target?._id || target?.id;
+                    if (id) {
+                      await deleteHall(id);
+                      const refreshed = await getHalls();
+                      const list = Array.isArray(refreshed) ? refreshed : refreshed?.halls || [];
+                      if (list.length) setHallList(list);
+                      else setHallList((current) => current.filter((_, idx) => idx !== deleteTargetIndex));
+                    } else {
+                      setHallList((current) => current.filter((_, idx) => idx !== deleteTargetIndex));
+                    }
+                  } catch (err) {
+                    setHallList((current) => current.filter((_, idx) => idx !== deleteTargetIndex));
+                  } finally {
+                    setDeleteTargetIndex(null);
+                  }
+                }}
+              >
                 Delete
               </button>
               <button type="button" className="secondary" onClick={() => setDeleteTargetIndex(null)}>
