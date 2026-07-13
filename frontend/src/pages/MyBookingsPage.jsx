@@ -45,10 +45,12 @@ export function MyBookingsPage() {
                 </div>
                 <div className="text-right">
                   <p className="font-semibold">Rp{Number(booking.totalPrice).toLocaleString("id-ID")}</p>
-                  <p className="text-sm capitalize text-slate-400">{booking.paymentStatus}</p>
-                  <button className="mt-3 rounded-lg border border-red-400/50 px-3 py-2 text-sm text-red-200" onClick={() => handleCancel(booking._id)}>
-                    Cancel booking
-                  </button>
+                  <p className="text-sm capitalize text-slate-400">{booking.status === "cancelled" ? "Cancelled" : booking.paymentStatus}</p>
+                  {booking.status !== "cancelled" && (
+                    <button className="mt-3 rounded-lg border border-red-400/50 px-3 py-2 text-sm text-red-200" onClick={() => handleCancel(booking._id)}>
+                      Cancel booking
+                    </button>
+                  )}
                 </div>
               </div>
             </article>

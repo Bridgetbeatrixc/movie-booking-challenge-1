@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext.jsx";
 import { createMovie, updateMovie, deleteMovie, getMovies } from "../../movies/api/movieApi.js";
 import { createShowtime, deleteShowtime, getShowtimes, updateShowtime } from "../../showtimes/api/showtimeApi.js";
-import { getBookings } from "../../bookings/api/bookingApi.js";
+import { getAdminBookings, getAdminStats } from "../api/adminApi.js";
 import { getHalls, createHall, updateHall, deleteHall } from "../../halls/api/hallApi.js";
-import { showtimeCatalog } from "../../showtimes/data/showtimes.js";
 
 const adminTabs = [
   { id: "dashboard", hash: "#admin", label: "Dashboard", icon: "▦" },
@@ -16,31 +15,23 @@ const adminTabs = [
   { id: "reports", hash: "#admin-reports", label: "Reports", icon: "↗" }
 ];
 
-const sampleBookings = [
-  { id: "BM-701D78", customer: "guest@example.com", movie: "Arrival", seats: "B8, C8", status: "paid", total: 70000 },
-  { id: "BM-92A113", customer: "demo@beatrix.test", movie: "The Nun", seats: "A4, A5", status: "pending", total: 70000 },
-  { id: "BM-5582CC", customer: "cinema@beatrix.test", movie: "Another Earth", seats: "D1", status: "paid", total: 35000 }
-];
-
-const sampleHalls = [
-  { name: "Studio 1", type: "Regular", seats: 72, status: "Open" },
-  { name: "Studio 2", type: "Premiere", seats: 48, status: "Open" },
-  { name: "IMAX Hall", type: "IMAX", seats: 96, status: "Maintenance" }
-];
-
 export function AdminShell({ movies = [], moviesLoading = false }) {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const activeTab = getActiveTab();
 
-  const [bookingsState, setBookingsState] = useState(sampleBookings);
-  const [hallsState, setHallsState] = useState(sampleHalls);
+  const [bookingsState, setBookingsState] = useState([]);
+  const [hallsState, setHallsState] = useState([]);
   const [dbConnected, setDbConnected] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState(null);
 
   const [localMovies, setLocalMovies] = useState(movies || []);
   const [localMoviesLoading, setLocalMoviesLoading] = useState(!!moviesLoading);
 
-  const stats = useMemo(() => buildStats(localMovies, bookingsState), [localMovies, bookingsState]);
+  const stats = useMemo(
+    () => (dashboardStats ? buildBackendStats(dashboardStats) : buildStats(localMovies, bookingsState)),
+    [dashboardStats, localMovies, bookingsState]
+  );
 
   useEffect(() => {
     setLocalMovies(movies || []);
@@ -55,7 +46,7 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
       const list = Array.isArray(res) ? res : res?.movies || [];
       setLocalMovies(list);
     } catch (err) {
-      // keep existing localMovies on error
+      setLocalMovies([]);
     } finally {
       setLocalMoviesLoading(false);
     }
@@ -80,15 +71,19 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
   useEffect(() => {
     let connected = false;
 
-    getBookings()
-      .then((res) => {
-        if (Array.isArray(res) && res.length > 0) {
-          setBookingsState(res);
+    Promise.all([getAdminBookings(), getAdminStats()])
+      .then(([bookings, statsResult]) => {
+        if (Array.isArray(bookings)) {
+          setBookingsState(bookings.map(normalizeBooking));
+          connected = true;
+        }
+        if (statsResult) {
+          setDashboardStats(statsResult);
           connected = true;
         }
       })
       .catch(() => {
-        // keep sample bookings
+        setBookingsState([]);
       })
       .finally(() => {
         getHalls()
@@ -99,7 +94,7 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
             }
           })
           .catch(() => {
-            // keep sample halls
+            setHallsState([]);
           })
           .finally(() => {
             setDbConnected(connected);
@@ -179,6 +174,27 @@ function buildStats(movies, bookings) {
   ];
 }
 
+function buildBackendStats(stats) {
+  return [
+    { label: "Movies", value: stats.movies || 0, tone: "blue" },
+    { label: "Showtimes", value: stats.showtimes || 0, tone: "cyan" },
+    { label: "Bookings", value: stats.bookings || 0, tone: "green" },
+    { label: "Users", value: stats.users || 0, tone: "gold" }
+  ];
+}
+
+function normalizeBooking(booking) {
+  return {
+    ...booking,
+    id: booking.ticket?.ticketCode || booking._id,
+    customer: booking.user?.email || "Unknown user",
+    movie: booking.movie?.title || booking.movieTitle || "Unknown movie",
+    seats: Array.isArray(booking.seats) ? booking.seats.join(", ") : booking.seats || "",
+    status: booking.status === "cancelled" ? "cancelled" : booking.paymentStatus || booking.status,
+    total: booking.totalPrice || 0
+  };
+}
+
 function AdminDashboard({ bookings, movies, moviesLoading, stats }) {
   return (
     <div className="admin-stack">
@@ -196,7 +212,7 @@ function AdminDashboard({ bookings, movies, moviesLoading, stats }) {
           <div className="admin-actions">
             <a href="#admin-movies">Add / manage movies</a>
             <a href="#admin-bookings">Review bookings</a>
-            <a href="#admin-reports">Open reports</a>why
+            <a href="#admin-reports">Open reports</a>
           </div>
         </AdminCard>
 
@@ -514,18 +530,8 @@ function AdminShowtimes({ movies }) {
       const response = await getShowtimes();
       setShowtimes(response.showtimes || []);
     } catch (error) {
-      setError("Backend unavailable — using sample showtimes.");
-
-      const movieTitleByKey = new Map(
-        movies.map((movie) => [movie.slug || movie.id || movie._id, movie.title])
-      );
-
-      const sampleShowtimes = showtimeCatalog.map((showtime) => ({
-        ...showtime,
-        movie: { title: movieTitleByKey.get(showtime.movieKey) || showtime.movieKey }
-      }));
-
-      setShowtimes(sampleShowtimes);
+      setError(error.message || "Unable to load showtimes from the backend.");
+      setShowtimes([]);
     } finally {
       setLoading(false);
     }
@@ -1082,6 +1088,8 @@ function AdminCard({ title, actions, children }) {
 }
 
 function BookingList({ bookings }) {
+  if (!bookings.length) return <p className="admin-muted">No recent bookings.</p>;
+
   return (
     <div className="admin-list">
       {bookings.map((booking) => (
@@ -1124,11 +1132,11 @@ function parseRuntimeToMinutes(runtime) {
 }
 
 function MovieList({ movies }) {
-  const displayMovies = movies.length ? movies : [{ title: "Arrival" }, { title: "The Nun" }, { title: "Annabelle" }];
+  if (!movies.length) return <p className="admin-muted">No movies found.</p>;
 
   return (
     <div className="admin-list">
-      {displayMovies.map((movie) => (
+      {movies.map((movie) => (
         <div key={movie.title}>
           <span>{movie.title}</span>
           <strong>{movie.status || "showing"}</strong>
@@ -1139,8 +1147,6 @@ function MovieList({ movies }) {
 }
 
 function MovieTable({ movies, onEdit, onDelete }) {
-  const displayMovies = movies.length ? movies : [{ title: "Arrival", genre: "Sci-Fi", duration: 116, status: "showing" }];
-
   return (
     <div className="admin-table-wrap">
       <table className="admin-table">
@@ -1154,7 +1160,7 @@ function MovieTable({ movies, onEdit, onDelete }) {
           </tr>
         </thead>
         <tbody>
-          {displayMovies.map((movie) => (
+          {movies.map((movie) => (
             <tr key={movie.slug || movie._id || movie.title}>
               <td>
                 <div className="admin-movie-cell">
@@ -1179,6 +1185,9 @@ function MovieTable({ movies, onEdit, onDelete }) {
               </td>
             </tr>
           ))}
+          {!movies.length ? (
+            <tr><td colSpan="5" className="admin-muted">No movies found.</td></tr>
+          ) : null}
         </tbody>
       </table>
     </div>
@@ -1212,6 +1221,9 @@ function BookingTable({ bookings }) {
               <td>{formatRupiah(booking.total)}</td>
             </tr>
           ))}
+          {!bookings.length ? (
+            <tr><td colSpan="6" className="admin-muted">No bookings found.</td></tr>
+          ) : null}
         </tbody>
       </table>
     </div>
