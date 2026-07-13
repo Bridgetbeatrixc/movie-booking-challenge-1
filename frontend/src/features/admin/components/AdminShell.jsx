@@ -255,8 +255,8 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
     setEditingMovie(movie);
     setNewMovie({
       title: movie.title || "",
-      genre: movie.genre || movie.genres || "",
-      duration: movie.duration || "",
+      genre: movie.genre || parseFirstGenre(movie.genres) || "",
+      duration: movie.duration || parseRuntimeToMinutes(movie.runtime) || "",
       rating: movie.rating || "",
       poster: movie.poster || "",
       description: movie.description || "",
@@ -273,10 +273,17 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setFormError("");
+    const runtimeMinutes = Number(newMovie.duration);
+    const rawGenre = newMovie.genre || "";
+    const genres = rawGenre
+      .split("/")
+      .map((genre) => genre.trim())
+      .filter(Boolean);
+
     const payload = {
       title: newMovie.title,
-      genre: newMovie.genre,
-      duration: Number(newMovie.duration),
+      genres,
+      runtime: formatDuration(runtimeMinutes),
       rating: newMovie.rating,
       poster: newMovie.poster,
       description: newMovie.description,
@@ -300,6 +307,24 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
       setSubmitting(false);
     }
   };
+
+  const genreOptions = useMemo(() => {
+    const genres = new Set();
+
+    movies.forEach((movie) => {
+      const rawGenres = movie.genres || movie.genre || "";
+      const genreList = Array.isArray(rawGenres)
+        ? rawGenres
+        : rawGenres.toString().split("/");
+
+      genreList.forEach((genre) => {
+        const clean = genre.toString().trim();
+        if (clean) genres.add(clean);
+      });
+    });
+
+    return [...genres].sort();
+  }, [movies]);
 
   const promptDeleteMovie = (movie) => {
     setDeleteTarget(movie);
@@ -365,7 +390,14 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
                 </label>
                 <label>
                   Genre
-                  <input name="genre" value={newMovie.genre} onChange={handleFieldChange} required />
+                  <select name="genre" value={newMovie.genre} onChange={handleFieldChange} required>
+                    <option value="">Select genre</option>
+                    {genreOptions.map((genre) => (
+                      <option key={genre} value={genre}>
+                        {genre}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label>
                   Duration (minutes)
@@ -1062,6 +1094,35 @@ function BookingList({ bookings }) {
   );
 }
 
+function parseFirstGenre(rawGenre) {
+  if (!rawGenre) return "";
+  if (Array.isArray(rawGenre)) {
+    return rawGenre[0] || "";
+  }
+  return rawGenre.toString().split("/")[0].trim();
+}
+
+function formatDuration(minutes) {
+  const time = Number(minutes);
+  if (!Number.isFinite(time) || time < 0) return "0h 00m";
+  const hours = Math.floor(time / 60);
+  const mins = time % 60;
+  return `${hours}h ${String(mins).padStart(2, "0")}m`;
+}
+
+function parseRuntimeToMinutes(runtime) {
+  if (!runtime) return "";
+  const hoursMatch = runtime.match(/(\d+)\s*h/i);
+  const minsMatch = runtime.match(/(\d+)\s*m/i);
+  const hours = hoursMatch ? Number(hoursMatch[1]) : 0;
+  const mins = minsMatch ? Number(minsMatch[1]) : 0;
+  const raw = Number(runtime.toString().replace(/[^0-9]/g, ""));
+  if (!hoursMatch && !minsMatch && Number.isFinite(raw)) {
+    return String(raw);
+  }
+  return String(hours * 60 + mins);
+}
+
 function MovieList({ movies }) {
   const displayMovies = movies.length ? movies : [{ title: "Arrival" }, { title: "The Nun" }, { title: "Annabelle" }];
 
@@ -1102,7 +1163,7 @@ function MovieTable({ movies, onEdit, onDelete }) {
                 </div>
               </td>
               <td>{movie.genre || movie.genres}</td>
-              <td>{movie.duration ? `${movie.duration} min` : movie.runtime}</td>
+              <td>{movie.duration ? formatDuration(movie.duration) : movie.runtime}</td>
               <td>
                 <StatusBadge status={movie.status || "showing"} />
               </td>
