@@ -109,6 +109,8 @@ cd backend
 npm run seed
 ```
 
+The seed imports real movies from OMDb, clears the previous fake movie/showtime/booking catalog, and preloads five movies per configured genre, five halls, stable showtimes, and the demo accounts. Set `OMDB_API_KEY` in `backend/.env` before running it; `SEED_BASE_DATE` controls the deterministic showtime calendar. The OMDb key must never be committed.
+
 Demo accounts use the `SEED_DEMO_PASSWORD` from `backend/.env` (default `ChallengePass123!`):
 
 Set `JWT_SECRET` in `backend/.env` before starting the API; login cannot issue cookies without it. Never commit `.env`.

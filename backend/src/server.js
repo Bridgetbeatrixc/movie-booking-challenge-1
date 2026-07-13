@@ -9,7 +9,6 @@ import showtimeRoutes from "./modules/showtimes/showtime.routes.js";
 import hallRoutes from "./modules/halls/hall.routes.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
-import { seedMovies } from "./shared/services/seedMovies.js";
 
 dotenv.config();
 
@@ -86,7 +85,6 @@ app.use((error, req, res, next) => {
 });
 
 connectDB()
-  .then(seedMovies)
   .then(() => {
     app.listen(port, () => {
       console.log(`API listening on http://localhost:${port}`);
