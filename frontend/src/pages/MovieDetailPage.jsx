@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Footer } from "../components/layout/Footer.jsx";
 import { Header } from "../components/layout/Header.jsx";
 import { getMovieById } from "../features/movies/api/movieApi.js";
@@ -106,12 +107,12 @@ export function MovieDetailPage({ movieKey, selectedMovie, setSelectedMovie }) {
         <section className="mx-auto grid max-w-6xl gap-8 px-6 py-10 lg:grid-cols-[260px_1fr]">
           <aside>
             <img className="w-full rounded-xl border border-blue-300/20 object-cover shadow-2xl" src={movie.poster} alt={movie.title} />
-            <a
+            <Link
               className="mt-5 block rounded-lg bg-blue-600 px-5 py-3 text-center text-sm font-semibold hover:bg-blue-500"
-              href="#booking"
+              to="/booking"
             >
               Choose showtime
-            </a>
+            </Link>
           </aside>
 
           <article className="min-w-0">

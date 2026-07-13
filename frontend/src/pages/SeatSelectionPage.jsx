@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { asset, defaultMovie } from "../features/movies/data/movies.js";
+import { useNavigate } from "react-router-dom";
+import { Header } from "../components/layout/Header.jsx";
+import { asset } from "../features/movies/data/movies.js";
+import { useAuth } from "../features/auth/AuthContext.jsx";
 import { BookingSummary } from "../features/showtimes/components/BookingSummary.jsx";
 import { SeatGrid } from "../features/showtimes/components/SeatGrid.jsx";
 import { ShowtimeList } from "../features/showtimes/components/ShowtimeList.jsx";
@@ -18,6 +21,8 @@ function getAvailableShowtime(showtimes, selectedDate, selectedStudio) {
 }
 
 export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
+  const navigate = useNavigate();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [showtimes, setShowtimes] = useState([]);
   const [selectedShowtime, setSelectedShowtime] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
@@ -50,7 +55,7 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
         if (!cancelled) {
           setShowtimes(nextShowtimes);
           setSelectedDate(firstAvailable?.date || nextShowtimes[0]?.date || "");
-          setSelectedStudio(firstAvailable?.studio || "");
+          setSelectedStudio("");
           setSelectedShowtime(firstAvailable || null);
         }
       } catch (error) {
@@ -143,8 +148,9 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
 
   function resetBooking() {
     setSelectedSeats([]);
-    setSelectedMovie(defaultMovie);
-    localStorage.removeItem("selectedMovie");
+    setCheckoutError("");
+    setSeatError("");
+    setSelectedShowtime(getAvailableShowtime(showtimes, selectedDate, selectedStudio) || null);
   }
 
   function refreshShowtimes() {
@@ -157,6 +163,12 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
 
   async function continueBooking() {
     if (!selectedShowtime || selectedSeats.length === 0) {
+      return;
+    }
+
+    if (!authLoading && !isAuthenticated) {
+      setCheckoutError("Please login before continuing to payment.");
+      navigate("/login");
       return;
     }
 
@@ -189,7 +201,7 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
 
   return (
     <div className="booking-page min-h-screen text-slate-100">
-      <Header />
+      <Header booking />
       <main className="mx-auto max-w-6xl px-6 pb-16">
         <BookingHero movie={selectedMovie} />
         <div className="mt-6">
@@ -231,19 +243,6 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
         Copyright 2026 Beatrix Movie - React booking demo
       </footer>
     </div>
-  );
-}
-
-function Header() {
-  return (
-    <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-      <a href="#">
-        <img src={asset("beatrix-logo.png")} alt="Beatrix Movie" className="h-9" />
-      </a>
-      <a href="#" className="text-sm text-slate-300 hover:text-white">
-        Back to movies
-      </a>
-    </header>
   );
 }
 

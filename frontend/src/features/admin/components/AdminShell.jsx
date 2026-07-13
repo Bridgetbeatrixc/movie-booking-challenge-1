@@ -743,8 +743,8 @@ function AdminShowtimes({ movies, halls = [] }) {
               ×
             </button>
             <div className="admin-modal-header">
-              <h3>Add new showtime</h3>
-              <p>Link this showtime to a movie and schedule its screening.</p>
+              <h3>{editingShowtime ? "Edit showtime" : "Add new showtime"}</h3>
+              <p>{editingShowtime ? "Update the screening schedule." : "Link this showtime to a movie and schedule its screening."}</p>
             </div>
             <form className="admin-movie-form" onSubmit={handleSubmit}>
               <div className="admin-form-grid">

@@ -42,7 +42,22 @@ export default function App() {
   const [selectedMovie, setSelectedMovie] = useState(() => getInitialMovie(movies));
 
   useEffect(() => {
-    setSelectedMovie((currentMovie) => movies.find((movie) => movie.title === currentMovie.title) || currentMovie);
+    if (!movies.length) {
+      return;
+    }
+
+    const savedMovie = localStorage.getItem("selectedMovie");
+
+    setSelectedMovie((currentMovie) => {
+      const currentMovieKey = getMovieKey(currentMovie);
+
+      return (
+        movies.find((movie) => getMovieKey(movie) === savedMovie || movie.title === savedMovie) ||
+        movies.find((movie) => getMovieKey(movie) === currentMovieKey || movie.title === currentMovie.title) ||
+        movies[0] ||
+        currentMovie
+      );
+    });
   }, [movies]);
 
   function chooseMovie(movie) {
@@ -71,7 +86,7 @@ export default function App() {
   }
 
   if (activeRoute === "booking") {
-    return <AuthOnly><SeatSelectionPage selectedMovie={selectedMovie} setSelectedMovie={chooseMovie} /></AuthOnly>;
+    return <SeatSelectionPage selectedMovie={selectedMovie} setSelectedMovie={chooseMovie} />;
   }
 
   if (activeRoute === "movie") {
