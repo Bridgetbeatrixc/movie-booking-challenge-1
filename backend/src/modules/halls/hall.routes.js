@@ -6,13 +6,14 @@ import {
   listHalls,
   updateHall
 } from "./hall.controller.js";
+import { authenticate, requireAdmin } from "../auth/auth.middleware.js";
 
 const router = Router();
 
 router.get("/", listHalls);
 router.get("/:id", getHallById);
-router.post("/", createHall);
-router.put("/:id", updateHall);
-router.delete("/:id", deleteHall);
+router.post("/", authenticate, requireAdmin, createHall);
+router.put("/:id", authenticate, requireAdmin, updateHall);
+router.delete("/:id", authenticate, requireAdmin, deleteHall);
 
 export default router;

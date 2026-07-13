@@ -3,6 +3,7 @@ import {
   checkoutBooking,
   cancelBooking,
   downloadTicketPdf,
+  getBookingById,
   listBookings,
   listOccupiedSeats,
   markBookingPaid,
@@ -22,6 +23,7 @@ router.patch("/:id/mock-paid", markBookingPaid);
 router.post("/:id/email", sendTicketEmailHandler);
 router.post("/:id/mock-email", sendTicketEmailHandler);
 router.get("/:id/ticket.pdf", downloadTicketPdf);
+router.get("/:id", getBookingById);
 router.delete("/:id", cancelBooking);
 
 export default router;

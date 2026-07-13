@@ -79,8 +79,7 @@ app.use((error, req, res, next) => {
 
   res.status(status).json({
     message,
-    details: error.details,
-    stack: process.env.NODE_ENV === "production" ? null : error.stack
+    details: error.details || undefined
   });
 });
 

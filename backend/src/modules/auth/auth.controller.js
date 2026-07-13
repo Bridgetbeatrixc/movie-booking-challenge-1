@@ -15,7 +15,7 @@ export async function register(req, res, next) {
     const userExists = await User.findOne({ email: email.toLowerCase() });
     
     if (userExists) {
-      res.status(400).json({ message: "Email address is already registered in the system." });
+      res.status(409).json({ message: "Email address is already registered in the system." });
       return;
     }
 

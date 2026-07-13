@@ -1,5 +1,5 @@
-import { Movie } from "../movies/movie.model.js";
 import { Showtime } from "../showtimes/showtime.model.js";
+import { validateSeatSelection } from "../showtimes/seatValidation.js";
 import { createTicketPdf, ensureTicket, sendTicketEmail } from "../../shared/services/ticketService.js";
 import { createMockXenditInvoice } from "../../shared/services/xenditMock.js";
 import { Booking } from "./booking.model.js";
@@ -14,9 +14,19 @@ async function findAuthorizedBooking(req, id) {
 
 export async function listBookings(req, res, next) {
   try {
-    const filter = req.user.role === "admin" ? {} : { user: req.user._id };
+    const filter = { user: req.user._id };
     const bookings = await Booking.find(filter).populate("movie showtimeId").sort({ createdAt: -1 });
     res.json(bookings);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getBookingById(req, res, next) {
+  try {
+    const booking = await findAuthorizedBooking(req, req.params.id);
+    if (!booking) return res.status(404).json({ message: "Booking not found." });
+    res.json(booking);
   } catch (error) {
     next(error);
   }
@@ -60,54 +70,74 @@ export async function createBooking(req, res, next) {
 
 export async function checkoutBooking(req, res, next) {
   try {
-    const { showtimeId, movieId, cinema, showtime, seats = [] } = req.body;
+    const { showtimeId, cinema, seats = [] } = req.body;
 
-    if (!seats.length) {
+    if (!Array.isArray(seats) || !seats.length) {
       return res.status(400).json({ message: "Choose at least one seat before payment." });
     }
-
-    let selectedShowtime = showtimeId ? await Showtime.findById(showtimeId).populate("movie") : null;
-    if (!selectedShowtime && movieId && showtime) {
-      const date = new Date(showtime);
-      selectedShowtime = await Showtime.findOne({ movie: movieId, date: date.toISOString().slice(0, 10), time: date.toISOString().slice(11, 16) }).populate("movie");
+    const seatValidation = validateSeatSelection(seats);
+    if (!seatValidation.isValid) {
+      return res.status(400).json({
+        message: "Seat selection is invalid.",
+        invalidSeats: seatValidation.invalidSeats,
+        duplicateSeats: seatValidation.duplicateSeats
+      });
     }
+    const selectedSeats = seatValidation.seats;
+
+    const selectedShowtime = showtimeId ? await Showtime.findById(showtimeId).populate("movie") : null;
     if (!selectedShowtime) return res.status(400).json({ message: "A valid showtimeId is required." });
 
     const movie = selectedShowtime.movie;
-    const totalPrice = seats.length * selectedShowtime.price;
+    const totalPrice = selectedSeats.length * selectedShowtime.price;
     const bookingShowtime = new Date(`${selectedShowtime.date}T${selectedShowtime.time}:00.000Z`);
     const bookingCinema = cinema || defaultCinema;
     const reservedShowtime = await Showtime.findOneAndUpdate(
-      { _id: selectedShowtime._id, bookedSeats: { $nin: seats } },
-      { $addToSet: { bookedSeats: { $each: seats } } },
+      { _id: selectedShowtime._id, bookedSeats: { $nin: selectedSeats } },
+      { $addToSet: { bookedSeats: { $each: selectedSeats } } },
       { new: true }
     );
     if (!reservedShowtime) {
       const current = await Showtime.findById(selectedShowtime._id).select("bookedSeats");
-      const unavailableSeats = seats.filter((seat) => current?.bookedSeats?.includes(seat));
+      const unavailableSeats = selectedSeats.filter((seat) => current?.bookedSeats?.includes(seat));
       return res.status(409).json({ message: "One or more selected seats are no longer available.", unavailableSeats });
     }
 
-    const booking = await Booking.create({
-      user: req.user._id,
-      movie: movie._id,
-      movieTitle: movie.title,
-      moviePoster: movie.poster,
-      cinema: bookingCinema,
-      showtime: bookingShowtime,
-      showtimeId: selectedShowtime._id,
-      seats,
-      totalPrice
-    });
+    let booking;
+    try {
+      booking = await Booking.create({
+        user: req.user._id,
+        movie: movie._id,
+        movieTitle: movie.title,
+        moviePoster: movie.poster,
+        cinema: bookingCinema,
+        showtime: bookingShowtime,
+        showtimeId: selectedShowtime._id,
+        seats: selectedSeats,
+        totalPrice
+      });
+    } catch (error) {
+      await Showtime.findByIdAndUpdate(selectedShowtime._id, { $pull: { bookedSeats: { $in: selectedSeats } } });
+      throw error;
+    }
 
-    const invoice = createMockXenditInvoice({
-      bookingId: booking._id,
-      amount: totalPrice,
-      movieTitle: booking.movieTitle
-    });
+    let invoice;
+    try {
+      invoice = createMockXenditInvoice({
+        bookingId: booking._id,
+        amount: totalPrice,
+        movieTitle: booking.movieTitle
+      });
 
-    booking.payment = invoice;
-    await booking.save();
+      booking.payment = invoice;
+      await booking.save();
+    } catch (error) {
+      await Promise.all([
+        Showtime.findByIdAndUpdate(selectedShowtime._id, { $pull: { bookedSeats: { $in: selectedSeats } } }),
+        Booking.findByIdAndDelete(booking._id)
+      ]);
+      throw error;
+    }
 
     res.status(201).json({ booking, payment: invoice });
   } catch (error) {
@@ -198,10 +228,12 @@ export async function cancelBooking(req, res, next) {
   try {
     const booking = await findAuthorizedBooking(req, req.params.id);
     if (!booking) return res.status(404).json({ message: "Booking not found." });
+    if (booking.status === "cancelled") return res.status(409).json({ message: "Booking is already cancelled." });
     await Showtime.findByIdAndUpdate(booking.showtimeId?._id || booking.showtimeId, {
       $pull: { bookedSeats: { $in: booking.seats } }
     });
-    await booking.deleteOne();
+    booking.status = "cancelled";
+    await booking.save();
     res.json({ message: "Booking cancelled and seats released." });
   } catch (error) {
     next(error);
