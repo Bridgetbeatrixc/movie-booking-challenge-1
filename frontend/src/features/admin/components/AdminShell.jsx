@@ -61,6 +61,17 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
     }
   };
 
+  const reloadHalls = async () => {
+    try {
+      const res = await getHalls();
+      const list = Array.isArray(res) ? res : res?.halls || [];
+      setHallsState(list);
+      return list;
+    } catch (err) {
+      return null;
+    }
+  };
+
   const handleSignOut = async () => {
     await logout();
     navigate('/login', { replace: true });
@@ -138,7 +149,7 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
           {activeTab === "movies" ? <AdminMovies movies={localMovies} moviesLoading={localMoviesLoading} onMovieCreated={reloadMovies} /> : null}
           {activeTab === "showtimes" ? <AdminShowtimes movies={localMovies} /> : null}
           {activeTab === "bookings" ? <AdminBookings bookings={bookingsState} /> : null}
-          {activeTab === "halls" ? <AdminHalls halls={hallsState} /> : null}
+          {activeTab === "halls" ? <AdminHalls halls={hallsState} reloadHalls={reloadHalls} /> : null}
           {activeTab === "reports" ? <AdminReports bookings={bookingsState} stats={stats} /> : null}
       </main>
     </div>
@@ -185,7 +196,7 @@ function AdminDashboard({ bookings, movies, moviesLoading, stats }) {
           <div className="admin-actions">
             <a href="#admin-movies">Add / manage movies</a>
             <a href="#admin-bookings">Review bookings</a>
-            <a href="#admin-reports">Open reports</a>
+            <a href="#admin-reports">Open reports</a>why
           </div>
         </AdminCard>
 
@@ -760,7 +771,7 @@ function ShowtimeTable({ showtimes, onEdit, onDelete }) {
   );
 }
 
-function AdminHalls({ halls }) {
+function AdminHalls({ halls, reloadHalls }) {
   const [isAdding, setIsAdding] = useState(false);
   const [hallList, setHallList] = useState(halls);
   const [newHall, setNewHall] = useState({
@@ -772,10 +783,31 @@ function AdminHalls({ halls }) {
   const [editingHallIndex, setEditingHallIndex] = useState(null);
   const [deleteTargetIndex, setDeleteTargetIndex] = useState(null);
   const [formError, setFormError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    setHallList(halls);
-  }, [halls]);
+    if (Array.isArray(halls) && halls.length > 0) {
+      setHallList(halls);
+      return;
+    }
+
+    if (!reloadHalls) {
+      setHallList(halls);
+      return;
+    }
+
+    setLoading(true);
+    reloadHalls()
+      .then((list) => {
+        if (Array.isArray(list)) {
+          setHallList(list);
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [halls, reloadHalls]);
 
   const resetHallForm = () => {
     setNewHall({ name: "", type: "Regular", seats: "", status: "Open" });
@@ -821,41 +853,41 @@ function AdminHalls({ halls }) {
       status: newHall.status
     };
 
+    setSubmitting(true);
     setIsAdding(false);
 
     try {
       if (editingHallIndex !== null) {
         const existing = hallList[editingHallIndex];
         const id = existing?._id || existing?.id;
-        if (id) {
-          await updateHall(id, updatedHall);
-          const refreshed = await getHalls();
-          const list = Array.isArray(refreshed) ? refreshed : refreshed?.halls || [];
-          if (list.length) setHallList(list);
-          else setHallList((current) => current.map((hall, index) => (index === editingHallIndex ? { ...hall, ...updatedHall } : hall)));
-        } else {
-          // no backend id, try creating instead
-          await createHall(updatedHall);
-          const refreshed = await getHalls();
-          const list = Array.isArray(refreshed) ? refreshed : refreshed?.halls || [];
-          if (list.length) setHallList(list);
-          else setHallList((current) => current.map((hall, index) => (index === editingHallIndex ? updatedHall : hall)));
+        if (!id) {
+          throw new Error("Missing hall ID for update.");
         }
+        await updateHall(id, updatedHall);
       } else {
         await createHall(updatedHall);
-        const refreshed = await getHalls();
-        const list = Array.isArray(refreshed) ? refreshed : refreshed?.halls || [];
-        if (list.length) setHallList(list);
-        else setHallList((current) => [...current, updatedHall]);
+      }
+
+      const refreshed = await reloadHalls?.();
+      if (Array.isArray(refreshed)) {
+        setHallList(refreshed);
+      } else {
+        setHallList((current) => {
+          if (editingHallIndex !== null) {
+            return current.map((hall, index) => (index === editingHallIndex ? { ...hall, ...updatedHall } : hall));
+          }
+          return [...current, updatedHall];
+        });
       }
     } catch (err) {
-      // backend unavailable or error — fallback to local update
+      setFormError(err?.message || "Unable to save hall.");
       if (editingHallIndex !== null) {
-        setHallList((current) => current.map((hall, index) => (index === editingHallIndex ? updatedHall : hall)));
+        setHallList((current) => current.map((hall, index) => (index === editingHallIndex ? { ...hall, ...updatedHall } : hall)));
       } else {
         setHallList((current) => [...current, updatedHall]);
       }
     } finally {
+      setSubmitting(false);
       resetHallForm();
     }
   };
@@ -949,21 +981,26 @@ function AdminHalls({ halls }) {
                 className="danger"
                 onClick={async () => {
                   try {
+                    setSubmitting(true);
                     const target = hallList[deleteTargetIndex];
                     const id = target?._id || target?.id;
                     if (id) {
                       await deleteHall(id);
-                      const refreshed = await getHalls();
-                      const list = Array.isArray(refreshed) ? refreshed : refreshed?.halls || [];
-                      if (list.length) setHallList(list);
-                      else setHallList((current) => current.filter((_, idx) => idx !== deleteTargetIndex));
+                      const refreshed = await reloadHalls?.();
+                      if (Array.isArray(refreshed)) {
+                        setHallList(refreshed);
+                      } else {
+                        setHallList((current) => current.filter((_, idx) => idx !== deleteTargetIndex));
+                      }
                     } else {
                       setHallList((current) => current.filter((_, idx) => idx !== deleteTargetIndex));
                     }
                   } catch (err) {
+                    setFormError(err?.message || "Unable to delete hall.");
                     setHallList((current) => current.filter((_, idx) => idx !== deleteTargetIndex));
                   } finally {
                     setDeleteTargetIndex(null);
+                    setSubmitting(false);
                   }
                 }}
               >
@@ -1017,7 +1054,7 @@ function BookingList({ bookings }) {
     <div className="admin-list">
       {bookings.map((booking) => (
         <div key={booking.id}>
-          <span>{booking.movie}</span>
+          <span>{booking.movie?.title || booking.movie || "Unknown movie"}</span>
           <strong>{booking.id}</strong>
         </div>
       ))}
