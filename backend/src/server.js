@@ -37,8 +37,10 @@ app.use(
   })
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Movie posters may be sent as validated base64 data URLs from the admin form.
+// Keep this below MongoDB's document limit while allowing the frontend's 2 MB images.
+app.use(express.json({ limit: "5mb" }));
+app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 app.use(cookieParser());
 
 app.get("/", (req, res) => {

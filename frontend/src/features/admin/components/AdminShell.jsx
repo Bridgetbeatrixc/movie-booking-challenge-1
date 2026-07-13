@@ -246,6 +246,7 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
     duration: "",
     rating: "",
     poster: "",
+    trailerVideoId: "",
     description: "",
     slug: ""
   });
@@ -260,6 +261,7 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
       duration: "",
       rating: "",
       poster: "",
+      trailerVideoId: "",
       description: "",
       slug: ""
     });
@@ -275,6 +277,7 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
       duration: movie.duration || parseRuntimeToMinutes(movie.runtime) || "",
       rating: movie.rating || "",
       poster: movie.poster || "",
+      trailerVideoId: movie.trailerVideoId || "",
       description: movie.description || "",
       slug: movie.slug || ""
     });
@@ -286,9 +289,29 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
     setNewMovie((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handlePosterFile = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setFormError("Please choose an image file.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setFormError("Image must be 2 MB or smaller.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setNewMovie((prev) => ({ ...prev, poster: reader.result }));
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setFormError("");
+    if (!newMovie.poster) {
+      setFormError("Add a poster URL or upload an image before saving.");
+      return;
+    }
     const runtimeMinutes = Number(newMovie.duration);
     const rawGenre = newMovie.genre || "";
     const genres = rawGenre
@@ -302,6 +325,7 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
       runtime: formatDuration(runtimeMinutes),
       rating: newMovie.rating,
       poster: newMovie.poster,
+      trailerVideoId: normalizeTrailerId(newMovie.trailerVideoId),
       description: newMovie.description,
       slug: newMovie.slug
     };
@@ -425,7 +449,16 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
                 </label>
                 <label>
                   Poster URL
-                  <input name="poster" type="url" value={newMovie.poster} onChange={handleFieldChange} required />
+                  <input name="poster" type="url" value={newMovie.poster.startsWith("data:") ? "" : newMovie.poster} onChange={handleFieldChange} placeholder="https://..." required={!newMovie.poster.startsWith("data:")} />
+                </label>
+                <label>
+                  Or upload poster
+                  <input type="file" accept="image/*" onChange={handlePosterFile} />
+                  {newMovie.poster.startsWith("data:") ? <img src={newMovie.poster} alt="Poster preview" className="mt-2 h-24 w-16 rounded object-cover" /> : null}
+                </label>
+                <label>
+                  Trailer link or YouTube ID
+                  <input name="trailerVideoId" value={newMovie.trailerVideoId} onChange={handleFieldChange} placeholder="https://youtube.com/watch?v=..." />
                 </label>
                 <label>
                   Slug
@@ -1129,6 +1162,13 @@ function parseRuntimeToMinutes(runtime) {
     return String(raw);
   }
   return String(hours * 60 + mins);
+}
+
+function normalizeTrailerId(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const match = raw.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{6,})/i);
+  return match ? match[1] : raw;
 }
 
 function MovieList({ movies }) {
