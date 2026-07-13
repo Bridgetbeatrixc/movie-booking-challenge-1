@@ -1,6 +1,7 @@
+import { useNavigate } from "react-router-dom";
 import { Footer } from "../components/layout/Footer.jsx";
 import { Header } from "../components/layout/Header.jsx";
-import { advanceSaleMovies, comingSoonMovies } from "../features/movies/data/movies.js";
+import { advanceSaleMovies, comingSoonMovies, getMovieKey } from "../features/movies/data/movies.js";
 import { asset } from "../utils/assets.js";
 
 const statusOptions = [
@@ -17,9 +18,12 @@ const sortOptions = [
   { label: "Title", value: "title" }
 ];
 
+const fallbackGenres = ["Action", "Adventure", "Drama", "Fantasy", "Horror", "Romance", "Sci-Fi", "Thriller"];
+
 export function HomePage({
   movies,
   moviesError,
+  movieGenres = [],
   moviesLoading,
   movieFilters,
   moviePagination,
@@ -27,6 +31,14 @@ export function HomePage({
   setMovieFilters,
   setSelectedMovie
 }) {
+  const navigate = useNavigate();
+
+  function openMovie(movie) {
+    setSelectedMovie(movie);
+    const movieKey = getMovieKey(movie);
+    navigate(movieKey ? `/movie/${encodeURIComponent(movieKey)}` : "/movie");
+  }
+
   return (
     <>
       <Header />
@@ -37,7 +49,9 @@ export function HomePage({
           filters={movieFilters}
           movies={movies}
           moviesError={moviesError}
+          movieGenres={movieGenres}
           moviesLoading={moviesLoading}
+          onOpenMovie={openMovie}
           pagination={moviePagination}
           setFilters={setMovieFilters}
           selectedMovie={selectedMovie}
@@ -146,7 +160,7 @@ function PromoCard({ cardClass, id, image, imageClass, text, title }) {
   );
 }
 
-function FeaturedMovies({ filters, movies, moviesError, moviesLoading, pagination, selectedMovie, setFilters, setSelectedMovie }) {
+function FeaturedMovies({ filters, movieGenres, movies, moviesError, moviesLoading, onOpenMovie, pagination, selectedMovie, setFilters }) {
   return (
     <section id="movies" className="mx-auto max-w-7xl px-6 pb-12">
       <div className="mb-6 flex items-end justify-between gap-4">
@@ -156,10 +170,10 @@ function FeaturedMovies({ filters, movies, moviesError, moviesLoading, paginatio
         </div>
         <span className="text-sm text-slate-400">{moviesLoading ? "Loading from MongoDB..." : "Pick one to book seats"}</span>
       </div>
-      <MovieControls filters={filters} loading={moviesLoading} setFilters={setFilters} />
+      <MovieControls filters={filters} genres={movieGenres} loading={moviesLoading} setFilters={setFilters} />
       {moviesError ? (
         <p className="mb-4 rounded-lg border border-amber-400/30 bg-amber-950/40 p-3 text-sm text-amber-100">
-          Using local sample movies because API is offline: {moviesError}
+          Movie data could not be loaded from the API: {moviesError}
         </p>
       ) : null}
       {movies.length ? (
@@ -170,10 +184,7 @@ function FeaturedMovies({ filters, movies, moviesError, moviesLoading, paginatio
                 selectedMovie.title === movie.title ? "selected border-blue-400" : "border-slate-700"
               }`}
               key={movie.id || movie._id || movie.title}
-              onClick={() => {
-                setSelectedMovie(movie);
-                window.location.hash = "movie";
-              }}
+              onClick={() => onOpenMovie(movie)}
               type="button"
             >
               <img src={movie.poster} alt={movie.title} className="h-64 w-full object-cover object-top" />
@@ -197,7 +208,9 @@ function FeaturedMovies({ filters, movies, moviesError, moviesLoading, paginatio
   );
 }
 
-function MovieControls({ filters, loading, setFilters }) {
+function MovieControls({ filters, genres = [], loading, setFilters }) {
+  const genreOptions = genres.length ? genres : fallbackGenres;
+
   return (
     <div className="mb-5 grid gap-3 rounded-xl border border-slate-700 bg-[#06152d] p-4 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
       <label className="text-xs font-semibold text-slate-400">
@@ -212,13 +225,18 @@ function MovieControls({ filters, loading, setFilters }) {
       </label>
       <label className="text-xs font-semibold text-slate-400">
         Genre
-        <input
+        <select
           className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-400"
           onChange={(event) => setFilters({ genre: event.target.value })}
-          placeholder="Horror, Sci-Fi..."
-          type="search"
           value={filters.genre}
-        />
+        >
+          <option value="">All genres</option>
+          {genreOptions.map((genre) => (
+            <option key={genre} value={genre}>
+              {genre}
+            </option>
+          ))}
+        </select>
       </label>
       <label className="text-xs font-semibold text-slate-400">
         Status

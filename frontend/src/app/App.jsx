@@ -38,7 +38,7 @@ function AuthOnly({ children }) {
 export default function App() {
   const location = useLocation();
   const route = useHashRoute();
-  const { filters, movies, loading, error, pagination, setFilters } = useMovies();
+  const { filters, genres, movies, loading, error, pagination, setFilters } = useMovies();
   const [selectedMovie, setSelectedMovie] = useState(() => getInitialMovie(movies));
 
   useEffect(() => {
@@ -51,8 +51,12 @@ export default function App() {
   }
 
   const hashPath = location.hash ? location.hash.replace(/^#/, '') : '';
-  const pathRoute = { "/movie": "movie", "/booking": "booking", "/payment": "payment", "/admin": "admin", "/my-bookings": "my-bookings" }[location.pathname];
+  const movieRouteMatch = location.pathname.match(/^\/movie\/([^/]+)$/);
+  const pathRoute = movieRouteMatch
+    ? "movie"
+    : { "/movie": "movie", "/movies": "home", "/booking": "booking", "/payment": "payment", "/admin": "admin", "/my-bookings": "my-bookings" }[location.pathname];
   const activeRoute = route === "home" ? pathRoute || "home" : route;
+  const selectedMovieKey = movieRouteMatch ? decodeURIComponent(movieRouteMatch[1]) : getMovieKey(selectedMovie);
 
   if (location.pathname === "/login" || hashPath === "/login" || hashPath === "login") {
     return <LoginPage />;
@@ -71,7 +75,7 @@ export default function App() {
   }
 
   if (activeRoute === "movie") {
-    return <MovieDetailPage selectedMovie={selectedMovie} />;
+    return <MovieDetailPage movieKey={selectedMovieKey} selectedMovie={selectedMovie} setSelectedMovie={chooseMovie} />;
   }
 
   if (activeRoute === "payment") {
@@ -94,6 +98,7 @@ export default function App() {
     <HomePage
       movies={movies}
       moviesError={error}
+      movieGenres={genres}
       moviesLoading={loading}
       movieFilters={filters}
       moviePagination={pagination}

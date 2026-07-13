@@ -1,3 +1,4 @@
+import { sampleMovies } from "../../data/sampleMovies.js";
 import { sampleShowtimes } from "../../data/sampleShowtimes.js";
 import { Movie } from "../../modules/movies/movie.model.js";
 import { Showtime } from "../../modules/showtimes/showtime.model.js";
@@ -18,12 +19,22 @@ function dateOffset(days) {
 }
 
 export async function seedMovies() {
-  const seedMovies = process.env.OMDB_API_KEY
-    ? await fetchOmdbMovies(process.env.OMDB_API_KEY, 5)
-    : [];
-  if (!seedMovies.length) {
-    throw new Error("OMDB_API_KEY is required to seed the real movie catalog.");
+  let seedMovies = sampleMovies;
+
+  if (process.env.OMDB_API_KEY) {
+    try {
+      const omdbMovies = await fetchOmdbMovies(process.env.OMDB_API_KEY, 5);
+
+      if (omdbMovies.length) {
+        seedMovies = omdbMovies;
+      }
+    } catch (error) {
+      console.warn(`OMDb seed failed, using local sample movies instead: ${error.message}`);
+    }
+  } else {
+    console.warn("OMDB_API_KEY is not set. Using local sample movies for seed data.");
   }
+
   const demoPassword = process.env.SEED_DEMO_PASSWORD || "ChallengePass123!";
   const users = [
     { name: "Beatrix Admin", email: "admin@beatrix.test", role: "admin" },
@@ -60,10 +71,26 @@ export async function seedMovies() {
     movie: movieBySlug.get(showtime.movieSlug), date: dateOffset(showtime.daysFromNow),
     time: showtime.time, studio: showtime.studio, price: showtime.price, bookedSeats: showtime.bookedSeats
   }));
-  const generatedShowtimes = movies.flatMap((movie, index) => [
-    { movie: movie._id, date: dateOffset((index % 7) + 1), time: "16:00", studio: "Studio 1", price: 35000, bookedSeats: [] },
-    { movie: movie._id, date: dateOffset((index % 7) + 1), time: "20:00", studio: index % 3 === 0 ? "Hall IMAX" : "Studio 2", price: index % 3 === 0 ? 45000 : 40000, bookedSeats: [] }
-  ]);
+  const generatedShowtimes = movies.flatMap((movie, index) => {
+    const firstDayOffset = (index % 7) + 1;
+
+    return [0, 1, 2].flatMap((extraDay) => {
+      const date = dateOffset(firstDayOffset + extraDay);
+      const premiumStudio = (index + extraDay) % 3 === 0 ? "Hall IMAX" : "Studio 2";
+
+      return [
+        { movie: movie._id, date, time: "16:00", studio: "Studio 1", price: 35000, bookedSeats: [] },
+        {
+          movie: movie._id,
+          date,
+          time: "20:00",
+          studio: premiumStudio,
+          price: premiumStudio === "Hall IMAX" ? 45000 : 40000,
+          bookedSeats: []
+        }
+      ];
+    });
+  });
   const showtimeDocs = [...configuredShowtimes, ...generatedShowtimes].filter((showtime) => showtime.movie);
   await Showtime.bulkWrite(showtimeDocs.map((showtime) => ({
     updateOne: {
@@ -71,5 +98,5 @@ export async function seedMovies() {
       update: { $setOnInsert: showtime }, upsert: true
     }
   })));
-  console.log(`Seeded ${movies.length} OMDb movies, ${halls.length} halls, and showtimes for the catalog.`);
+  console.log(`Seeded ${movies.length} movies, ${halls.length} halls, and showtimes for the catalog.`);
 }

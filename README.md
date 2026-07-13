@@ -109,7 +109,7 @@ cd backend
 npm run seed
 ```
 
-The seed imports real movies from OMDb, clears the previous fake movie/showtime/booking catalog, and preloads five movies per configured genre, five halls, stable showtimes, and the demo accounts. Set `OMDB_API_KEY` in `backend/.env` before running it; `SEED_BASE_DATE` controls the deterministic showtime calendar. The OMDb key must never be committed.
+The seed clears the previous fake movie/showtime/booking catalog, then preloads movies, five halls, stable showtimes, and the demo accounts. If `OMDB_API_KEY` exists in `backend/.env`, movie data is imported from OMDb. If it is not set, the seed still works with local sample movies. `SEED_BASE_DATE` controls the deterministic showtime calendar. The OMDb key must never be committed.
 
 Demo accounts use the `SEED_DEMO_PASSWORD` from `backend/.env` (default `ChallengePass123!`):
 
