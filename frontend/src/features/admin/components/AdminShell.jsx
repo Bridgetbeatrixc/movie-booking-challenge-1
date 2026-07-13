@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext.jsx";
 import { createMovie, updateMovie, deleteMovie } from "../../movies/api/movieApi.js";
 import { createShowtime, deleteShowtime, getShowtimes, updateShowtime } from "../../showtimes/api/showtimeApi.js";
 import { showtimeCatalog } from "../../showtimes/data/showtimes.js";
@@ -25,8 +27,15 @@ const sampleHalls = [
 ];
 
 export function AdminShell({ movies = [], moviesLoading = false }) {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const activeTab = getActiveTab();
   const stats = useMemo(() => buildStats(movies, sampleBookings), [movies]);
+
+  const handleSignOut = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className="admin-page min-h-screen">
@@ -59,7 +68,9 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
             <p>ADMINISTRATION</p>
             <h1>{adminTabs.find((tab) => tab.id === activeTab)?.label || "Dashboard"}</h1>
           </div>
-          <span className="admin-status">Sandbox mode</span>
+          <button type="button" className="admin-status admin-signout" onClick={handleSignOut}>
+            Sign out
+          </button>
         </header>
 
         {activeTab === "dashboard" ? <AdminDashboard bookings={sampleBookings} movies={movies} moviesLoading={moviesLoading} stats={stats} /> : null}
@@ -152,6 +163,7 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
   });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const resetForm = () => {
     setNewMovie({
@@ -247,7 +259,17 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
   return (
     <AdminCard title="Movie catalog">
       <div className="admin-toolbar">
-        <input aria-label="Search movies" placeholder="Search movie title" />
+        <div className="admin-search-wrap">
+          <input
+            aria-label="Search movies"
+            placeholder="Search movie title or genre"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery ? (
+            <button type="button" onClick={() => setSearchQuery("")}>Clear</button>
+          ) : null}
+        </div>
         <button type="button" onClick={() => setIsAdding(true)}>
           Add movie
         </button>
@@ -330,7 +352,24 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
         </div>
       ) : null}
 
-      {moviesLoading ? <p className="admin-muted">Loading movies...</p> : <MovieTable movies={movies} onEdit={startEditMovie} onDelete={promptDeleteMovie} />}
+      {moviesLoading ? (
+        <p className="admin-muted">Loading movies...</p>
+      ) : (
+        <MovieTable
+          movies={
+            !searchQuery
+              ? movies
+              : movies.filter((m) => {
+                  const q = searchQuery.toLowerCase();
+                  const title = (m.title || "").toLowerCase();
+                  const genre = (m.genre || m.genres || "").toString().toLowerCase();
+                  return title.includes(q) || genre.includes(q);
+                })
+          }
+          onEdit={startEditMovie}
+          onDelete={promptDeleteMovie}
+        />
+      )}
     </AdminCard>
   );
 }
@@ -359,6 +398,9 @@ function AdminShowtimes({ movies }) {
   });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
+  const [filterMovie, setFilterMovie] = useState("");
+  const [filterStudio, setFilterStudio] = useState("");
+  const [filterTime, setFilterTime] = useState("");
 
   const loadShowtimes = async () => {
     setLoading(true);
@@ -432,6 +474,27 @@ function AdminShowtimes({ movies }) {
     loadShowtimes();
   }, []);
 
+  const availableHalls = Array.from(new Set(showtimes.map((s) => s.studio).filter(Boolean)));
+
+  const filteredShowtimes = showtimes.filter((s) => {
+    if (filterMovie) {
+      const movieTitle = (s.movie?.title || "").toLowerCase();
+      if (!movieTitle.includes(filterMovie.toLowerCase())) return false;
+    }
+
+    if (filterStudio) {
+      if ((s.studio || "").toLowerCase() !== filterStudio.toLowerCase()) return false;
+    }
+
+    if (filterTime) {
+      // simple match: compare hour:minute
+      if (!s.time) return false;
+      if (!s.time.startsWith(filterTime)) return false;
+    }
+
+    return true;
+  });
+
   const handleFieldChange = (event) => {
     const { name, value } = event.target;
     setNewShowtime((prev) => ({ ...prev, [name]: value }));
@@ -469,10 +532,34 @@ function AdminShowtimes({ movies }) {
   return (
     <AdminCard title="Showtime catalog">
       <div className="admin-toolbar">
-        <input aria-label="Search showtimes" placeholder="Search showtimes" disabled />
-        <button type="button" onClick={() => setIsAdding(true)}>
-          Add showtime
-        </button>
+        <select className="admin-toolbar-select" value={filterMovie} onChange={(e) => setFilterMovie(e.target.value)}>
+          <option value="">All movies</option>
+          {movies.map((m) => (
+            <option key={m.slug || m._id || m.title} value={m.title}>
+              {m.title}
+            </option>
+          ))}
+        </select>
+
+        <select className="admin-toolbar-select" value={filterStudio} onChange={(e) => setFilterStudio(e.target.value)}>
+          <option value="">All halls</option>
+          {availableHalls.map((h) => (
+            <option key={h} value={h}>
+              {h}
+            </option>
+          ))}
+        </select>
+
+        <input className="admin-toolbar-time" type="time" value={filterTime} onChange={(e) => setFilterTime(e.target.value)} />
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button type="button" onClick={() => { setFilterMovie(''); setFilterStudio(''); setFilterTime(''); }}>
+            Clear
+          </button>
+          <button type="button" onClick={() => setIsAdding(true)}>
+            Add showtime
+          </button>
+        </div>
       </div>
 
       {isAdding ? (
@@ -555,7 +642,7 @@ function AdminShowtimes({ movies }) {
       ) : (
         <>
           {error ? <p className="admin-error">{error}</p> : null}
-          <ShowtimeTable showtimes={showtimes} onEdit={startEditShowtime} onDelete={promptDeleteShowtime} />
+          <ShowtimeTable showtimes={filteredShowtimes} onEdit={startEditShowtime} onDelete={promptDeleteShowtime} />
         </>
       )}
     </AdminCard>

@@ -1219,6 +1219,18 @@ body {
 .admin-status {
   border: 1px solid rgba(45, 212, 191, 0.45);
   color: #99f6e4;
+  background: rgba(45, 212, 191, 0.08);
+}
+
+.admin-signout {
+  cursor: pointer;
+  background: rgba(248, 113, 113, 0.13);
+  border-color: rgba(248, 113, 113, 0.18);
+  color: #fecaca;
+}
+
+.admin-signout:hover {
+  background: rgba(248, 113, 113, 0.18);
 }
 
 .admin-stack {
@@ -1364,6 +1376,13 @@ body {
   margin-bottom: 18px;
 }
 
+.admin-search-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 1;
+}
+
 .admin-toolbar input {
   min-height: 46px;
   flex: 1;
@@ -1373,6 +1392,27 @@ body {
   padding: 0 14px;
   color: #fff;
   outline: none;
+}
+
+.admin-toolbar-select,
+.admin-toolbar-time {
+  min-height: 46px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 14px;
+  background: rgba(2, 12, 28, 0.8);
+  padding: 0 14px;
+  color: #fff;
+  outline: none;
+  font-size: 0.95rem;
+}
+
+.admin-toolbar-select {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.admin-toolbar-time {
+  padding: 8px 12px;
 }
 
 .admin-toolbar button {
