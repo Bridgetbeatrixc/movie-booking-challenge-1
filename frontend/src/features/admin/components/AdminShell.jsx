@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext.jsx";
-import { createMovie, updateMovie, deleteMovie } from "../../movies/api/movieApi.js";
+import { createMovie, updateMovie, deleteMovie, getMovies } from "../../movies/api/movieApi.js";
 import { createShowtime, deleteShowtime, getShowtimes, updateShowtime } from "../../showtimes/api/showtimeApi.js";
+import { getBookings } from "../../bookings/api/bookingApi.js";
+import { getHalls, createHall, updateHall, deleteHall } from "../../halls/api/hallApi.js";
 import { showtimeCatalog } from "../../showtimes/data/showtimes.js";
 
 const adminTabs = [
@@ -30,12 +32,80 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const activeTab = getActiveTab();
-  const stats = useMemo(() => buildStats(movies, sampleBookings), [movies]);
+
+  const [bookingsState, setBookingsState] = useState(sampleBookings);
+  const [hallsState, setHallsState] = useState(sampleHalls);
+  const [dbConnected, setDbConnected] = useState(false);
+
+  const [localMovies, setLocalMovies] = useState(movies || []);
+  const [localMoviesLoading, setLocalMoviesLoading] = useState(!!moviesLoading);
+
+  const stats = useMemo(() => buildStats(localMovies, bookingsState), [localMovies, bookingsState]);
+
+  useEffect(() => {
+    setLocalMovies(movies || []);
+    setLocalMoviesLoading(!!moviesLoading);
+  }, [movies, moviesLoading]);
+
+  const reloadMovies = async () => {
+    setLocalMoviesLoading(true);
+    try {
+      const res = await getMovies();
+      // API may return { movies: [...] } or array
+      const list = Array.isArray(res) ? res : res?.movies || [];
+      setLocalMovies(list);
+    } catch (err) {
+      // keep existing localMovies on error
+    } finally {
+      setLocalMoviesLoading(false);
+    }
+  };
+
+  const reloadHalls = async () => {
+    try {
+      const res = await getHalls();
+      const list = Array.isArray(res) ? res : res?.halls || [];
+      setHallsState(list);
+      return list;
+    } catch (err) {
+      return null;
+    }
+  };
 
   const handleSignOut = async () => {
     await logout();
     navigate('/login', { replace: true });
   };
+
+  useEffect(() => {
+    let connected = false;
+
+    getBookings()
+      .then((res) => {
+        if (Array.isArray(res) && res.length > 0) {
+          setBookingsState(res);
+          connected = true;
+        }
+      })
+      .catch(() => {
+        // keep sample bookings
+      })
+      .finally(() => {
+        getHalls()
+          .then((res) => {
+            if (Array.isArray(res) && res.length > 0) {
+              setHallsState(res);
+              connected = true;
+            }
+          })
+          .catch(() => {
+            // keep sample halls
+          })
+          .finally(() => {
+            setDbConnected(connected);
+          });
+      });
+  }, []);
 
   return (
     <div className="admin-page min-h-screen">
@@ -68,17 +138,19 @@ export function AdminShell({ movies = [], moviesLoading = false }) {
             <p>ADMINISTRATION</p>
             <h1>{adminTabs.find((tab) => tab.id === activeTab)?.label || "Dashboard"}</h1>
           </div>
-          <button type="button" className="admin-status admin-signout" onClick={handleSignOut}>
-            Sign out
-          </button>
+            <div className="admin-topbar-meta">
+              <span className={`admin-db ${dbConnected ? "connected" : "fallback"}`}>{dbConnected ? "DB Connected" : "Using sample data"}</span>
+              <button type="button" className="admin-status admin-signout" onClick={handleSignOut}>
+                Sign out
+              </button>
+            </div>
         </header>
-
-        {activeTab === "dashboard" ? <AdminDashboard bookings={sampleBookings} movies={movies} moviesLoading={moviesLoading} stats={stats} /> : null}
-        {activeTab === "movies" ? <AdminMovies movies={movies} moviesLoading={moviesLoading} /> : null}
-        {activeTab === "showtimes" ? <AdminShowtimes movies={movies} /> : null}
-        {activeTab === "bookings" ? <AdminBookings bookings={sampleBookings} /> : null}
-        {activeTab === "halls" ? <AdminHalls halls={sampleHalls} /> : null}
-        {activeTab === "reports" ? <AdminReports bookings={sampleBookings} stats={stats} /> : null}
+          {activeTab === "dashboard" ? <AdminDashboard bookings={bookingsState} movies={localMovies} moviesLoading={localMoviesLoading} stats={stats} /> : null}
+          {activeTab === "movies" ? <AdminMovies movies={localMovies} moviesLoading={localMoviesLoading} onMovieCreated={reloadMovies} /> : null}
+          {activeTab === "showtimes" ? <AdminShowtimes movies={localMovies} /> : null}
+          {activeTab === "bookings" ? <AdminBookings bookings={bookingsState} /> : null}
+          {activeTab === "halls" ? <AdminHalls halls={hallsState} reloadHalls={reloadHalls} /> : null}
+          {activeTab === "reports" ? <AdminReports bookings={bookingsState} stats={stats} /> : null}
       </main>
     </div>
   );
@@ -124,7 +196,7 @@ function AdminDashboard({ bookings, movies, moviesLoading, stats }) {
           <div className="admin-actions">
             <a href="#admin-movies">Add / manage movies</a>
             <a href="#admin-bookings">Review bookings</a>
-            <a href="#admin-reports">Open reports</a>
+            <a href="#admin-reports">Open reports</a>why
           </div>
         </AdminCard>
 
@@ -183,8 +255,8 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
     setEditingMovie(movie);
     setNewMovie({
       title: movie.title || "",
-      genre: movie.genre || movie.genres || "",
-      duration: movie.duration || "",
+      genre: movie.genre || parseFirstGenre(movie.genres) || "",
+      duration: movie.duration || parseRuntimeToMinutes(movie.runtime) || "",
       rating: movie.rating || "",
       poster: movie.poster || "",
       description: movie.description || "",
@@ -201,10 +273,17 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setFormError("");
+    const runtimeMinutes = Number(newMovie.duration);
+    const rawGenre = newMovie.genre || "";
+    const genres = rawGenre
+      .split("/")
+      .map((genre) => genre.trim())
+      .filter(Boolean);
+
     const payload = {
       title: newMovie.title,
-      genre: newMovie.genre,
-      duration: Number(newMovie.duration),
+      genres,
+      runtime: formatDuration(runtimeMinutes),
       rating: newMovie.rating,
       poster: newMovie.poster,
       description: newMovie.description,
@@ -228,6 +307,24 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
       setSubmitting(false);
     }
   };
+
+  const genreOptions = useMemo(() => {
+    const genres = new Set();
+
+    movies.forEach((movie) => {
+      const rawGenres = movie.genres || movie.genre || "";
+      const genreList = Array.isArray(rawGenres)
+        ? rawGenres
+        : rawGenres.toString().split("/");
+
+      genreList.forEach((genre) => {
+        const clean = genre.toString().trim();
+        if (clean) genres.add(clean);
+      });
+    });
+
+    return [...genres].sort();
+  }, [movies]);
 
   const promptDeleteMovie = (movie) => {
     setDeleteTarget(movie);
@@ -293,7 +390,14 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
                 </label>
                 <label>
                   Genre
-                  <input name="genre" value={newMovie.genre} onChange={handleFieldChange} required />
+                  <select name="genre" value={newMovie.genre} onChange={handleFieldChange} required>
+                    <option value="">Select genre</option>
+                    {genreOptions.map((genre) => (
+                      <option key={genre} value={genre}>
+                        {genre}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label>
                   Duration (minutes)
@@ -699,7 +803,7 @@ function ShowtimeTable({ showtimes, onEdit, onDelete }) {
   );
 }
 
-function AdminHalls({ halls }) {
+function AdminHalls({ halls, reloadHalls }) {
   const [isAdding, setIsAdding] = useState(false);
   const [hallList, setHallList] = useState(halls);
   const [newHall, setNewHall] = useState({
@@ -711,10 +815,31 @@ function AdminHalls({ halls }) {
   const [editingHallIndex, setEditingHallIndex] = useState(null);
   const [deleteTargetIndex, setDeleteTargetIndex] = useState(null);
   const [formError, setFormError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    setHallList(halls);
-  }, [halls]);
+    if (Array.isArray(halls) && halls.length > 0) {
+      setHallList(halls);
+      return;
+    }
+
+    if (!reloadHalls) {
+      setHallList(halls);
+      return;
+    }
+
+    setLoading(true);
+    reloadHalls()
+      .then((list) => {
+        if (Array.isArray(list)) {
+          setHallList(list);
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [halls, reloadHalls]);
 
   const resetHallForm = () => {
     setNewHall({ name: "", type: "Regular", seats: "", status: "Open" });
@@ -739,7 +864,7 @@ function AdminHalls({ halls }) {
     setIsAdding(true);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setFormError("");
 
@@ -760,14 +885,43 @@ function AdminHalls({ halls }) {
       status: newHall.status
     };
 
-    if (editingHallIndex !== null) {
-      setHallList((current) => current.map((hall, index) => (index === editingHallIndex ? updatedHall : hall)));
-    } else {
-      setHallList((current) => [...current, updatedHall]);
-    }
-
+    setSubmitting(true);
     setIsAdding(false);
-    resetHallForm();
+
+    try {
+      if (editingHallIndex !== null) {
+        const existing = hallList[editingHallIndex];
+        const id = existing?._id || existing?.id;
+        if (!id) {
+          throw new Error("Missing hall ID for update.");
+        }
+        await updateHall(id, updatedHall);
+      } else {
+        await createHall(updatedHall);
+      }
+
+      const refreshed = await reloadHalls?.();
+      if (Array.isArray(refreshed)) {
+        setHallList(refreshed);
+      } else {
+        setHallList((current) => {
+          if (editingHallIndex !== null) {
+            return current.map((hall, index) => (index === editingHallIndex ? { ...hall, ...updatedHall } : hall));
+          }
+          return [...current, updatedHall];
+        });
+      }
+    } catch (err) {
+      setFormError(err?.message || "Unable to save hall.");
+      if (editingHallIndex !== null) {
+        setHallList((current) => current.map((hall, index) => (index === editingHallIndex ? { ...hall, ...updatedHall } : hall)));
+      } else {
+        setHallList((current) => [...current, updatedHall]);
+      }
+    } finally {
+      setSubmitting(false);
+      resetHallForm();
+    }
   };
 
   return (
@@ -854,10 +1008,34 @@ function AdminHalls({ halls }) {
               <p>Are you sure you want to remove this studio? This action cannot be undone.</p>
             </div>
             <div className="admin-form-actions">
-              <button type="button" className="danger" onClick={() => {
-                setHallList((current) => current.filter((_, idx) => idx !== deleteTargetIndex));
-                setDeleteTargetIndex(null);
-              }}>
+              <button
+                type="button"
+                className="danger"
+                onClick={async () => {
+                  try {
+                    setSubmitting(true);
+                    const target = hallList[deleteTargetIndex];
+                    const id = target?._id || target?.id;
+                    if (id) {
+                      await deleteHall(id);
+                      const refreshed = await reloadHalls?.();
+                      if (Array.isArray(refreshed)) {
+                        setHallList(refreshed);
+                      } else {
+                        setHallList((current) => current.filter((_, idx) => idx !== deleteTargetIndex));
+                      }
+                    } else {
+                      setHallList((current) => current.filter((_, idx) => idx !== deleteTargetIndex));
+                    }
+                  } catch (err) {
+                    setFormError(err?.message || "Unable to delete hall.");
+                    setHallList((current) => current.filter((_, idx) => idx !== deleteTargetIndex));
+                  } finally {
+                    setDeleteTargetIndex(null);
+                    setSubmitting(false);
+                  }
+                }}
+              >
                 Delete
               </button>
               <button type="button" className="secondary" onClick={() => setDeleteTargetIndex(null)}>
@@ -908,12 +1086,41 @@ function BookingList({ bookings }) {
     <div className="admin-list">
       {bookings.map((booking) => (
         <div key={booking.id}>
-          <span>{booking.movie}</span>
+          <span>{booking.movie?.title || booking.movie || "Unknown movie"}</span>
           <strong>{booking.id}</strong>
         </div>
       ))}
     </div>
   );
+}
+
+function parseFirstGenre(rawGenre) {
+  if (!rawGenre) return "";
+  if (Array.isArray(rawGenre)) {
+    return rawGenre[0] || "";
+  }
+  return rawGenre.toString().split("/")[0].trim();
+}
+
+function formatDuration(minutes) {
+  const time = Number(minutes);
+  if (!Number.isFinite(time) || time < 0) return "0h 00m";
+  const hours = Math.floor(time / 60);
+  const mins = time % 60;
+  return `${hours}h ${String(mins).padStart(2, "0")}m`;
+}
+
+function parseRuntimeToMinutes(runtime) {
+  if (!runtime) return "";
+  const hoursMatch = runtime.match(/(\d+)\s*h/i);
+  const minsMatch = runtime.match(/(\d+)\s*m/i);
+  const hours = hoursMatch ? Number(hoursMatch[1]) : 0;
+  const mins = minsMatch ? Number(minsMatch[1]) : 0;
+  const raw = Number(runtime.toString().replace(/[^0-9]/g, ""));
+  if (!hoursMatch && !minsMatch && Number.isFinite(raw)) {
+    return String(raw);
+  }
+  return String(hours * 60 + mins);
 }
 
 function MovieList({ movies }) {
@@ -956,7 +1163,7 @@ function MovieTable({ movies, onEdit, onDelete }) {
                 </div>
               </td>
               <td>{movie.genre || movie.genres}</td>
-              <td>{movie.duration ? `${movie.duration} min` : movie.runtime}</td>
+              <td>{movie.duration ? formatDuration(movie.duration) : movie.runtime}</td>
               <td>
                 <StatusBadge status={movie.status || "showing"} />
               </td>

@@ -12,6 +12,11 @@ export function getOccupiedSeats(params) {
   return apiRequest(`/api/bookings/occupied?${search.toString()}`);
 }
 
+export function getBookings(params = {}) {
+  const search = new URLSearchParams(params);
+  return apiRequest(`/api/bookings${search.toString() ? `?${search.toString()}` : ""}`);
+}
+
 export function markBookingPaid(bookingId) {
   return apiRequest(`/api/bookings/${bookingId}/mock-paid`, {
     method: "PATCH"
