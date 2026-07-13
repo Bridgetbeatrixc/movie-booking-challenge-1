@@ -125,6 +125,7 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
 
     try {
       const result = await checkoutBooking({
+        showtimeId: selectedShowtime.id,
         movieId: selectedMovie._id || selectedMovie.id,
         movieTitle: selectedMovie.title,
         moviePoster: selectedMovie.poster,
@@ -137,6 +138,10 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
       window.location.hash = "payment";
     } catch (error) {
       setCheckoutError(error.message || "Unable to create the QRIS payment.");
+      if (error.unavailableSeats?.length) {
+        setSelectedSeats((current) => current.filter((seat) => !error.unavailableSeats.includes(seat)));
+        refreshSeats();
+      }
     } finally {
       setIsCheckingOut(false);
     }

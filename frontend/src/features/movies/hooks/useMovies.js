@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { movies as fallbackMovies } from "../data/movies.js";
 import { getMovies } from "../api/movieApi.js";
 
 function normalizeMovie(movie) {
@@ -14,7 +13,7 @@ function normalizeMovie(movie) {
 }
 
 export function useMovies() {
-  const [movies, setMovies] = useState(fallbackMovies);
+  const [movies, setMovies] = useState([]);
   const [filters, setFilters] = useState({
     search: "",
     genre: "",
@@ -27,7 +26,7 @@ export function useMovies() {
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 8,
-    total: fallbackMovies.length,
+    total: 0,
     totalPages: 1
   });
   const [loading, setLoading] = useState(false);
@@ -62,11 +61,11 @@ export function useMovies() {
       } catch (requestError) {
         if (active) {
           setError(requestError.message);
-          setMovies(fallbackMovies);
+          setMovies([]);
           setPagination({
             page: 1,
-            limit: fallbackMovies.length,
-            total: fallbackMovies.length,
+            limit: filters.limit,
+            total: 0,
             totalPages: 1
           });
         }

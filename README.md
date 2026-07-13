@@ -102,6 +102,23 @@ npm install
 npm run dev
 ```
 
+## Seed challenge data
+
+```bash
+cd backend
+npm run seed
+```
+
+Demo accounts use the `SEED_DEMO_PASSWORD` from `backend/.env` (default `ChallengePass123!`):
+
+Set `JWT_SECRET` in `backend/.env` before starting the API; login cannot issue cookies without it. Never commit `.env`.
+
+- `admin@beatrix.test` - admin
+- `user1@beatrix.test` - normal user
+- `user2@beatrix.test` - normal user
+
+See [REQUIREMENTS_AUDIT.md](REQUIREMENTS_AUDIT.md) for the implemented requirement matrix and [API_CONTRACT.md](API_CONTRACT.md) for the current API reference. The exported Postman collection is in `postman/`.
+
 Frontend default: `http://localhost:5173`
 Backend default: `http://localhost:5000`
 

@@ -15,7 +15,7 @@ export async function register(req, res, next) {
     const userExists = await User.findOne({ email: email.toLowerCase() });
     
     if (userExists) {
-      res.status(400).json({ message: "Email address is already registered in the system." });
+      res.status(409).json({ message: "Email address is already registered in the system." });
       return;
     }
 
@@ -53,7 +53,11 @@ export async function login(req, res, next) {
 
     if (user && (await user.matchPassword(password))) {
       const token = jwt.sign(
-        { userId: user._id, role: user.role },
+        {
+          userId: user._id.toString(),
+          email: user.email,
+          role: user.role
+        },
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
       );

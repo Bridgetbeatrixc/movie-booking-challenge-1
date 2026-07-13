@@ -8,6 +8,7 @@ import {
   listShowtimes,
   updateShowtime
 } from "./showtime.controller.js";
+import { authenticate, requireAdmin } from "../auth/auth.middleware.js";
 
 const router = Router();
 

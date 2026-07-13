@@ -6,6 +6,7 @@ import { connectDB } from "./config/db.js";
 import bookingRoutes from "./modules/bookings/booking.routes.js";
 import movieRoutes from "./modules/movies/movie.routes.js";
 import showtimeRoutes from "./modules/showtimes/showtime.routes.js";
+import hallRoutes from "./modules/halls/hall.routes.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
 import { authenticate, requireAdmin } from "./modules/auth/auth.middleware.js";
@@ -37,8 +38,10 @@ app.use(
   })
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Movie posters may be sent as validated base64 data URLs from the admin form.
+// Keep this below MongoDB's document limit while allowing the frontend's 2 MB images.
+app.use(express.json({ limit: "5mb" }));
+app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 app.use(cookieParser());
 
 app.get("/", (req, res) => {
@@ -46,10 +49,12 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/movies", movieRoutes);
 app.use("/api/showtimes", showtimeRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/admin", authenticate, requireAdmin, adminRoutes);
+app.use("/api/halls", hallRoutes);
 
 app.use((req, res, next) => {
   const error = new Error(`Server endpoint not found - ${req.originalUrl}`);
@@ -79,7 +84,7 @@ app.use((error, req, res, next) => {
   res.status(status).json({
     message,
     details: error.details,
-    stack: process.env.NODE_ENV !== "production" ? null : error.stack
+    stack: process.env.NODE_ENV !== "production" ? error.stack : null
   });
 });
 

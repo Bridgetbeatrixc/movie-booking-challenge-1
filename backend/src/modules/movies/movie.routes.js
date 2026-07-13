@@ -9,6 +9,7 @@ import {
   listMovies,
   updateMovie
 } from "./movie.controller.js";
+import { authenticate, requireAdmin } from "../auth/auth.middleware.js";
 
 const router = Router();
 

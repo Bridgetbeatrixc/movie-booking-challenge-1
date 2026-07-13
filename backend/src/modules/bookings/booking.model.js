@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const bookingSchema = new mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true
+    },
     movie: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Movie",
@@ -32,6 +38,12 @@ const bookingSchema = new mongoose.Schema(
       required: true,
       index: true
     },
+    showtimeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Showtime",
+      required: true,
+      index: true
+    },
     seats: {
       type: [String],
       required: true,
@@ -43,6 +55,12 @@ const bookingSchema = new mongoose.Schema(
     totalPrice: {
       type: Number,
       required: true
+    },
+    status: {
+      type: String,
+      enum: ["confirmed", "cancelled"],
+      default: "confirmed",
+      index: true
     },
     paymentStatus: {
       type: String,

@@ -52,6 +52,60 @@ function getMovieLookup(idOrSlug) {
   return { slug: idOrSlug };
 }
 
+function makeSlug(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function validateMoviePayload(body, { partial = false } = {}) {
+  const payload = {};
+  const errors = {};
+  if (body.title !== undefined) {
+    const title = String(body.title).trim();
+    if (!title) errors.title = "Title is required.";
+    else payload.title = title;
+  } else if (!partial) errors.title = "Title is required.";
+
+  if (body.genres !== undefined || body.genre !== undefined) {
+    const rawGenres = body.genres ?? body.genre;
+    const genres = (Array.isArray(rawGenres) ? rawGenres : String(rawGenres).split(/[,/]/))
+      .map((genre) => String(genre).trim())
+      .filter(Boolean);
+    if (!genres.length) errors.genres = "At least one genre is required.";
+    else payload.genres = genres;
+  } else if (!partial) errors.genres = "At least one genre is required.";
+
+  if (body.runtime !== undefined) {
+    const runtime = String(body.runtime).trim();
+    const minutes = Number.parseInt(runtime, 10);
+    if (!runtime || !Number.isFinite(minutes) || minutes <= 0) errors.runtime = "Runtime must be positive.";
+    else payload.runtime = runtime;
+  } else if (!partial) errors.runtime = "Runtime is required.";
+
+  ["poster", "description", "trailerVideoId", "shortTitle", "status"].forEach((field) => {
+    if (body[field] !== undefined) payload[field] = body[field];
+  });
+  ["rating", "year", "price"].forEach((field) => {
+    if (body[field] !== undefined) {
+      const value = Number(body[field]);
+      if (!Number.isFinite(value) || (field === "price" && value <= 0)) errors[field] = `${field} is invalid.`;
+      else payload[field] = value;
+    }
+  });
+  if (body.releaseDate !== undefined) payload.releaseDate = body.releaseDate;
+  if (body.slug !== undefined) payload.slug = makeSlug(body.slug);
+  if (Object.keys(errors).length) {
+    const error = new Error("Movie validation failed.");
+    error.status = 400;
+    error.details = errors;
+    throw error;
+  }
+  return payload;
+}
+
 export async function listMovies(req, res, next) {
   try {
     const filter = buildMovieFilter(req.query);
@@ -104,7 +158,9 @@ export async function listMovieGenres(_req, res, next) {
 
 export async function createMovie(req, res, next) {
   try {
-    const movie = await Movie.create(req.body);
+    const payload = validateMoviePayload(req.body);
+    payload.slug ||= makeSlug(payload.title);
+    const movie = await Movie.create(payload);
     res.status(201).json(movie);
   } catch (error) {
     next(error);
@@ -113,7 +169,9 @@ export async function createMovie(req, res, next) {
 
 export async function updateMovie(req, res, next) {
   try {
-    const movie = await Movie.findOneAndUpdate(getMovieLookup(req.params.id), req.body, {
+    const payload = validateMoviePayload(req.body, { partial: true });
+    if (payload.title && !payload.slug) payload.slug = makeSlug(payload.title);
+    const movie = await Movie.findOneAndUpdate(getMovieLookup(req.params.id), payload, {
       new: true,
       runValidators: true
     });

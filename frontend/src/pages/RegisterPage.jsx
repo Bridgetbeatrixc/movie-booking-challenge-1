@@ -55,69 +55,74 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="auth-container">
-      <h2>New Account Registration</h2>
-      
-      {validationError && <div className="error-message">{validationError}</div>}
-      {authError && <div className="error-message">{authError}</div>}
-      
-      <form onSubmit={handleSubmit} className="auth-form">
-        <div className="form-group">
-          <label htmlFor="name">Full Name</label>
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            disabled={isLoading}
-            placeholder="Enter full name"
-          />
+    <div className="auth-page-shell">
+      <div className="auth-modal">
+        <div className="auth-header">
+          <span className="auth-badge">Create Account</span>
+          <h2>New Account Registration</h2>
         </div>
-        
-        <div className="form-group">
-          <label htmlFor="email">Email Address</label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={isLoading}
-            placeholder="Enter email address"
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={isLoading}
-            placeholder="Enter password (min. 6 characters)"
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="confirmPassword">Confirm Password</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            disabled={isLoading}
-            placeholder="Retype password"
-          />
-        </div>
-        
-        <button type="submit" disabled={isLoading} className="btn-primary">
-          {isLoading ? 'Processing Registration...' : 'Register Account'}
-        </button>
-      </form>
+
+        {validationError && <div className="error-message">{validationError}</div>}
+        {authError && <div className="error-message">{authError}</div>}
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="name">Full Name</label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              disabled={isLoading}
+              placeholder="Enter full name"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="email">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={isLoading}
+              placeholder="Enter email address"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={isLoading}
+              placeholder="Enter password (min. 6 characters)"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Confirm Password</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              disabled={isLoading}
+              placeholder="Retype password"
+            />
+          </div>
+
+          <button type="submit" disabled={isLoading} className="btn-primary">
+            {isLoading ? 'Processing Registration...' : 'Register Account'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

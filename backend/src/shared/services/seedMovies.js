@@ -2,6 +2,7 @@ import { sampleMovies } from "../../data/sampleMovies.js";
 import { sampleShowtimes } from "../../data/sampleShowtimes.js";
 import { Movie } from "../../modules/movies/movie.model.js";
 import { Showtime } from "../../modules/showtimes/showtime.model.js";
+import { User } from "../../modules/auth/auth.model.js";
 
 function dateOffset(days) {
   const date = new Date();
@@ -15,6 +16,19 @@ function dateOffset(days) {
 }
 
 export async function seedMovies() {
+  const demoPassword = process.env.SEED_DEMO_PASSWORD || "ChallengePass123!";
+  const users = [
+    { name: "Beatrix Admin", email: "admin@beatrix.test", role: "admin" },
+    { name: "Demo User One", email: "user1@beatrix.test", role: "user" },
+    { name: "Demo User Two", email: "user2@beatrix.test", role: "user" }
+  ];
+  for (const userData of users) {
+    const existing = await User.findOne({ email: userData.email }).select("+passwordHash");
+    if (!existing) {
+      await User.create({ ...userData, passwordHash: demoPassword });
+    }
+  }
+
   const movieCount = await Movie.countDocuments();
 
   if (movieCount === 0) {

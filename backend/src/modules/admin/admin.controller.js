@@ -1,6 +1,6 @@
 import { Booking } from "../bookings/booking.model.js";
-import { Showtime } from "../showtimes/showtime.model.js";
 import { Movie } from "../movies/movie.model.js";
+import { Showtime } from "../showtimes/showtime.model.js";
 import { User } from "../auth/auth.model.js";
 
 export async function getAdminStats(_req, res, next) {
@@ -11,7 +11,6 @@ export async function getAdminStats(_req, res, next) {
       Booking.countDocuments(),
       User.countDocuments()
     ]);
-
     const revenueAgg = await Booking.aggregate([
       { $match: { paymentStatus: "paid" } },
       { $group: { _id: null, totalRevenue: { $sum: "$totalPrice" } } }
@@ -27,7 +26,12 @@ export async function getAdminStats(_req, res, next) {
 
 export async function listAllBookings(_req, res, next) {
   try {
-    const bookings = await Booking.find().sort({ createdAt: -1 }).limit(200);
+    const bookings = await Booking.find()
+      .populate("user", "name email role")
+      .populate("movie", "title poster")
+      .populate("showtimeId", "date time studio price")
+      .sort({ createdAt: -1 })
+      .limit(200);
     res.json({ bookings });
   } catch (error) {
     next(error);

@@ -1,0 +1,44 @@
+{
+  "info": {
+    "name": "Cinema Booking System - Mandatory API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "movieId", "value": "" },
+    { "key": "showtimeId", "value": "" },
+    { "key": "bookingId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        { "name": "Register normal user", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Postman User\",\n  \"email\": \"postman@example.test\",\n  \"password\": \"ChallengePass123!\",\n  \"role\": \"admin\"\n}" }, "url": "{{baseUrl}}/api/auth/register" } },
+        { "name": "Duplicate registration returns 409/400", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"name\":\"Postman User\",\"email\":\"postman@example.test\",\"password\":\"ChallengePass123!\"}" }, "url": "{{baseUrl}}/api/auth/register" } },
+        { "name": "Login user", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"email\":\"user1@beatrix.test\",\"password\":\"ChallengePass123!\"}" }, "url": "{{baseUrl}}/api/auth/login" } },
+        { "name": "Current user", "request": { "method": "GET", "url": "{{baseUrl}}/api/auth/me" } },
+        { "name": "Protected route without cookie returns 401", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/stats" } }
+      ]
+    },
+    {
+      "name": "Movie data and admin authorization",
+      "item": [
+        { "name": "Search/filter/paginate movies", "request": { "method": "GET", "url": "{{baseUrl}}/api/movies?search=arrival&genre=Sci-Fi&page=1&limit=8" } },
+        { "name": "Normal user admin create rejected with 403", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"title\":\"Denied Movie\",\"genres\":[\"Drama\"],\"runtime\":\"90m\",\"poster\":\"/poster.jpg\"}" }, "url": "{{baseUrl}}/api/movies" } },
+        { "name": "Admin login", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"email\":\"admin@beatrix.test\",\"password\":\"ChallengePass123!\"}" }, "url": "{{baseUrl}}/api/auth/login" } },
+        { "name": "Admin dashboard stats", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/stats" } },
+        { "name": "Admin all bookings", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/bookings" } }
+      ]
+    },
+    {
+      "name": "Booking integrity",
+      "item": [
+        { "name": "List showtime seats", "request": { "method": "GET", "url": "{{baseUrl}}/api/showtimes/{{showtimeId}}/seats" } },
+        { "name": "Create booking", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"showtimeId\":\"{{showtimeId}}\",\"seats\":[\"A1\"]}" }, "url": "{{baseUrl}}/api/bookings" } },
+        { "name": "Same seat by User B returns 409", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"showtimeId\":\"{{showtimeId}}\",\"seats\":[\"A1\"]}" }, "url": "{{baseUrl}}/api/bookings" } },
+        { "name": "My bookings", "request": { "method": "GET", "url": "{{baseUrl}}/api/bookings/me" } },
+        { "name": "Cancel own booking", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/bookings/{{bookingId}}" } }
+      ]
+    }
+  ]
+}
