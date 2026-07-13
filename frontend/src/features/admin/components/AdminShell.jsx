@@ -631,16 +631,13 @@ function AdminShowtimes({ movies, halls = [] }) {
   }, []);
 
   const hallOptions = useMemo(() => {
-    const hallNames = (Array.isArray(halls) ? halls : [])
-      .map((hall) => hall?.name)
-      .filter(Boolean);
+    const openHalls = (Array.isArray(halls) ? halls : [])
+      .filter((hall) => hall?.status === "Open");
+    
+    const openHallNames = new Set(openHalls.map((hall) => hall?.name).filter(Boolean));
 
-    const showtimeHallNames = showtimes
-      .map((showtime) => showtime?.studio)
-      .filter(Boolean);
-
-    return Array.from(new Set([...hallNames, ...showtimeHallNames]));
-  }, [halls, showtimes]);
+    return Array.from(openHallNames).sort();
+  }, [halls]);
 
   const availableHalls = hallOptions;
 
