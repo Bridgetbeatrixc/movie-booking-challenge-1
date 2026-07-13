@@ -111,6 +111,8 @@ npm run seed
 
 Demo accounts use the `SEED_DEMO_PASSWORD` from `backend/.env` (default `ChallengePass123!`):
 
+Set `JWT_SECRET` in `backend/.env` before starting the API; login cannot issue cookies without it. Never commit `.env`.
+
 - `admin@beatrix.test` - admin
 - `user1@beatrix.test` - normal user
 - `user2@beatrix.test` - normal user
