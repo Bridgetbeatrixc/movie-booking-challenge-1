@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Footer } from "../components/layout/Footer.jsx";
 import { Header } from "../components/layout/Header.jsx";
 import { checkoutBooking, getOccupiedSeats, markBookingPaid } from "../features/bookings/api/bookingApi.js";
-import { saveCheckout } from "../features/bookings/storage/checkoutStorage.js";
+import { clearCheckout, saveCheckout } from "../features/bookings/storage/checkoutStorage.js";
 import { defaultMovie } from "../features/movies/data/movies.js";
 import { BookingHero } from "../features/showtimes/components/BookingHero.jsx";
 import { BookingOptions } from "../features/showtimes/components/BookingOptions.jsx";
@@ -60,9 +60,12 @@ export function BookingPage({ selectedMovie, setSelectedMovie }) {
   }
 
   function resetBooking() {
+    clearCheckout();
     setSelectedSeats([]);
     setCheckout(null);
     setCheckoutError("");
+    setOccupiedSeats([]);
+    setIsCheckingOut(false);
     setSelectedMovie(defaultMovie);
     localStorage.removeItem("selectedMovie");
   }

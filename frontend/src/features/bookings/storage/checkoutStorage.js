@@ -11,3 +11,7 @@ export function loadCheckout() {
     return null;
   }
 }
+
+export function clearCheckout() {
+  localStorage.removeItem(checkoutStorageKey);
+}

@@ -5,7 +5,7 @@ import { SeatGrid } from "../features/showtimes/components/SeatGrid.jsx";
 import { ShowtimeList } from "../features/showtimes/components/ShowtimeList.jsx";
 import { fetchSeatAvailability, fetchShowtimesForMovie } from "../features/showtimes/api/showtimeApi.js";
 import { checkoutBooking } from "../features/bookings/api/bookingApi.js";
-import { saveCheckout } from "../features/bookings/storage/checkoutStorage.js";
+import { clearCheckout, saveCheckout } from "../features/bookings/storage/checkoutStorage.js";
 import { isPastShowtime } from "../utils/formatters.js";
 
 function getAvailableShowtime(showtimes, selectedDate, selectedStudio) {
@@ -142,7 +142,17 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
   }
 
   function resetBooking() {
+    clearCheckout();
     setSelectedSeats([]);
+    setSelectedShowtime(null);
+    setSelectedDate("");
+    setSelectedStudio("");
+    setSeatAvailability([]);
+    setShowtimes([]);
+    setShowtimeError("");
+    setSeatError("");
+    setCheckoutError("");
+    setIsCheckingOut(false);
     setSelectedMovie(defaultMovie);
     localStorage.removeItem("selectedMovie");
   }
