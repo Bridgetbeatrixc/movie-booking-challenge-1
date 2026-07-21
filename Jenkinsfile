@@ -6,19 +6,13 @@ pipeline {
     timestamps()
   }
 
-  environment {
-    REPOSITORY_URL = 'https://github.com/Bridgetbeatrixc/movie-booking-challenge-1.git'
-    REPOSITORY_BRANCH = 'main'
-    GIT_CREDENTIALS_ID = 'github-pat'
-  }
-
   stages {
     stage('Checkout') {
       steps {
         // Explicit git checkout works in a standalone Pipeline job.
-        git branch: env.REPOSITORY_BRANCH,
-            credentialsId: env.GIT_CREDENTIALS_ID,
-            url: env.REPOSITORY_URL
+        git branch: 'main',
+            credentialsId: 'github-pat',
+            url: 'https://github.com/Bridgetbeatrixc/movie-booking-challenge-1.git'
       }
     }
 
@@ -50,4 +44,3 @@ pipeline {
     }
   }
 }
-
