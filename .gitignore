@@ -2,6 +2,7 @@ node_modules/
 .npm-cache/
 dist/
 .env
+.env.docker
 .DS_Store
 npm-debug.log*
 *.log

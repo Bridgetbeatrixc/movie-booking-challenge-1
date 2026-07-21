@@ -7,6 +7,7 @@ Clean two-folder project structure:
 - `FEATURE_OWNERS.md` - pembagian owner fitur untuk 5 anggota tim
 - `API_CONTRACT.md` - shared API contract antar fitur
 - `RUNNING_GUIDE.md` - panduan menjalankan project lokal
+- `docs/RUN_AND_DOCKER_GUIDE.md` - complete local and Docker runbook
 - `SHOWTIME_GUIDE.md` - guide for the Showtime and Seat Selection role
 
 ## Code Structure
@@ -118,6 +119,42 @@ Set `JWT_SECRET` in `backend/.env` before starting the API; login cannot issue c
 - `admin@beatrix.test` - admin
 - `user1@beatrix.test` - normal user
 - `user2@beatrix.test` - normal user
+
+## Run with Docker
+
+Docker runs the React frontend, Express backend, and MongoDB as separate services on a
+private Compose network. MongoDB data is stored in the named `mongo-data` volume.
+
+```bash
+cp .env.docker.example .env.docker
+docker compose up -d --build
+docker compose ps
+```
+
+On PowerShell, the copy command is `Copy-Item .env.docker.example .env.docker`.
+
+Open `http://localhost:5173` for the frontend. The backend health endpoint is available at
+`http://localhost:5000/health` and MongoDB is reachable inside the network as `mongo:27017`.
+
+Seed the database explicitly after the containers are running:
+
+```bash
+docker compose exec backend npm run seed
+```
+
+View logs or stop the stack:
+
+```bash
+docker compose logs -f backend
+docker compose down
+```
+
+`docker compose down` removes containers but preserves MongoDB data. Use
+`docker compose down -v` only when you intentionally want to delete the database volume.
+
+To use MongoDB Atlas instead, change the backend `MONGODB_URI` in `docker-compose.yml` to
+your Atlas URI and remove the local MongoDB dependency/service for that environment. Never
+commit `.env.docker` or any real credentials.
 
 See [REQUIREMENTS_AUDIT.md](REQUIREMENTS_AUDIT.md) for the implemented requirement matrix and [API_CONTRACT.md](API_CONTRACT.md) for the current API reference. The exported Postman collection is in `postman/`.
 

@@ -1,0 +1,9 @@
+$kind: http-request
+url: "{{baseUrl}}/api/movies"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: '{"title":"Denied Movie","genres":["Drama"],"runtime":"90m","poster":"/poster.jpg"}'
+order: 2000

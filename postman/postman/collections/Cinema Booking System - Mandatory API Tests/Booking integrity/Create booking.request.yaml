@@ -1,0 +1,9 @@
+$kind: http-request
+url: "{{baseUrl}}/api/bookings"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: '{"showtimeId":"{{showtimeId}}","seats":["A1"]}'
+order: 2000

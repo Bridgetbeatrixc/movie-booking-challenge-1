@@ -95,3 +95,32 @@ Movie and showtime data are loaded from the backend API. Run `npm run seed` in t
 - Update `FEATURE_OWNERS.md` and `API_CONTRACT.md` when your scope changes.
 - Run `npm run build` in `frontend` before pushing frontend changes.
 - Run a backend syntax or smoke check before pushing backend changes.
+
+## 8. Docker Compose
+
+The Docker setup follows the Node.js + MongoDB pattern from the Docker workshop slides:
+separate images, a user-defined network, service-name discovery, and a named database volume.
+
+```bash
+cp .env.docker.example .env.docker
+docker compose up -d --build
+docker compose ps
+docker compose logs -f backend
+```
+
+On PowerShell, use `Copy-Item .env.docker.example .env.docker` instead of `cp`.
+
+URLs:
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:5000`
+- Backend health: `http://localhost:5000/health`
+
+Seed only when requested; it is not part of container startup:
+
+```bash
+docker compose exec backend npm run seed
+```
+
+Stop the stack while preserving data with `docker compose down`. The destructive
+`docker compose down -v` command also removes the `mongo-data` volume.

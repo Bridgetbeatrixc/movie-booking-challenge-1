@@ -2,6 +2,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import cookieParser from "cookie-parser";
+import mongoose from "mongoose";
 import { connectDB } from "./config/db.js";
 import bookingRoutes from "./modules/bookings/booking.routes.js";
 import movieRoutes from "./modules/movies/movie.routes.js";
@@ -14,6 +15,7 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
+const host = process.env.HOST || "0.0.0.0";
 const defaultClientOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
@@ -43,7 +45,12 @@ app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 app.use(cookieParser());
 
 app.get("/", (req, res) => {
-  res.json({ message: "Beatrix Movie API is running" });
+  res.json({ message: "Beatrix Movie API is running", database: "managed by MongoDB" });
+});
+
+app.get("/health", (req, res) => {
+  const connected = mongoose.connection.readyState === 1;
+  res.status(connected ? 200 : 503).json({ status: connected ? "ok" : "starting", database: connected ? "connected" : "disconnected" });
 });
 
 app.use("/api/auth", authRoutes);
@@ -84,13 +91,26 @@ app.use((error, req, res, next) => {
   });
 });
 
-connectDB()
-  .then(() => {
-    app.listen(port, () => {
-      console.log(`API listening on http://localhost:${port}`);
-    });
-  })
-  .catch((error) => {
-    console.error("Failed to start API:", error.message);
-    process.exit(1);
-  });
+// Start HTTP first, then retry MongoDB while the database container becomes ready.
+// Compose starts services in order, but does not guarantee that MongoDB is accepting
+// connections yet. Keeping the API alive makes the container observable during startup.
+app.listen(port, host, () => {
+  console.log(`API listening on http://${host}:${port}`);
+});
+
+async function connectWithRetry() {
+  if (!process.env.MONGODB_URI) {
+    console.error("Failed to connect to MongoDB: MONGODB_URI is missing.");
+    process.exitCode = 1;
+    return;
+  }
+
+  try {
+    await connectDB();
+  } catch (error) {
+    console.error(`MongoDB is not ready (${error.message}). Retrying in 3 seconds...`);
+    setTimeout(connectWithRetry, 3000);
+  }
+}
+
+connectWithRetry();
