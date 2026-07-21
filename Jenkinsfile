@@ -19,6 +19,8 @@ pipeline {
     stage('Validate Docker') {
       steps {
         // Jenkins is running on Windows, so use bat rather than sh.
+        // This fails early with a clear message when Docker Desktop is unavailable.
+        bat 'docker version'
         bat 'docker compose config'
       }
     }
@@ -40,7 +42,7 @@ pipeline {
   post {
     always {
       // Keep diagnostics Windows-compatible as well.
-      bat 'docker compose ps'
+      bat(returnStatus: true, script: 'docker compose ps')
     }
   }
 }
