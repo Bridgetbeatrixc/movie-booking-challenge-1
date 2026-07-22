@@ -40,8 +40,6 @@ export default function App() {
   const [selectedMovie, setSelectedMovie] = useState(() => getInitialMovie(movies));
   const location = useLocation();
   const route = useHashRoute();
-  const { filters, movies, loading, error, pagination, setFilters } = useMovies();
-  const [selectedMovie, setSelectedMovie] = useState(() => getInitialMovie(movies));
 
   useEffect(() => {
     setSelectedMovie((currentMovie) => movies.find((movie) => movie.title === currentMovie.title) || currentMovie);
