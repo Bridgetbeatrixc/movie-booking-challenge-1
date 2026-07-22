@@ -22,10 +22,16 @@ export function Header({ booking = false }) {
 }
 
 function BookingBackLink() {
+  const navigate = useNavigate();
+
   return (
-    <Link to="/" className="text-sm text-slate-300 hover:text-white">
+    <button
+      type="button"
+      onClick={() => navigate({ pathname: "/", search: "", hash: "" }, { replace: true })}
+      className="border-none bg-transparent p-0 text-sm text-slate-300 hover:text-white"
+    >
       Back to movies
-    </Link>
+    </button>
   );
 }
 
