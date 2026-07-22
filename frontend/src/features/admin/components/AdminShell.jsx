@@ -362,7 +362,7 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
   };
 
   const genreOptions = useMemo(() => {
-    const genres = new Set();
+    const genres = new Set(["Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Horror", "Romance", "Sci-Fi", "Thriller"]);
 
     movies.forEach((movie) => {
       const rawGenres = movie.genres || movie.genre || "";
@@ -442,15 +442,20 @@ function AdminMovies({ movies, moviesLoading, onMovieCreated }) {
                   <input name="title" value={newMovie.title} onChange={handleFieldChange} required />
                 </label>
                 <label>
-                  Genre
-                  <select name="genre" value={newMovie.genre} onChange={handleFieldChange} required>
-                    <option value="">Select genre</option>
-                    {genreOptions.map((genre) => (
-                      <option key={genre} value={genre}>
-                        {genre}
-                      </option>
-                    ))}
+                  Genres
+                  <select
+                    name="genre"
+                    multiple
+                    value={newMovie.genre ? newMovie.genre.split(" / ") : []}
+                    onChange={(event) => setNewMovie((prev) => ({
+                      ...prev,
+                      genre: Array.from(event.target.selectedOptions, (option) => option.value).join(" / ")
+                    }))}
+                    required
+                  >
+                    {genreOptions.map((genre) => <option key={genre} value={genre}>{genre}</option>)}
                   </select>
+                  <small className="admin-muted">Hold Ctrl/Cmd to select multiple genres.</small>
                 </label>
                 <label>
                   Duration (minutes)
@@ -567,6 +572,7 @@ function AdminShowtimes({ movies, halls = [] }) {
   const [filterMovie, setFilterMovie] = useState("");
   const [filterStudio, setFilterStudio] = useState("");
   const [filterTime, setFilterTime] = useState("");
+  const [filterDate, setFilterDate] = useState("");
 
   const loadShowtimes = async () => {
     setLoading(true);
@@ -631,16 +637,13 @@ function AdminShowtimes({ movies, halls = [] }) {
   }, []);
 
   const hallOptions = useMemo(() => {
-    const hallNames = (Array.isArray(halls) ? halls : [])
-      .map((hall) => hall?.name)
-      .filter(Boolean);
+    const openHalls = (Array.isArray(halls) ? halls : [])
+      .filter((hall) => hall?.status === "Open");
+    
+    const openHallNames = new Set(openHalls.map((hall) => hall?.name).filter(Boolean));
 
-    const showtimeHallNames = showtimes
-      .map((showtime) => showtime?.studio)
-      .filter(Boolean);
-
-    return Array.from(new Set([...hallNames, ...showtimeHallNames]));
-  }, [halls, showtimes]);
+    return Array.from(openHallNames).sort();
+  }, [halls]);
 
   const availableHalls = hallOptions;
 
@@ -659,6 +662,8 @@ function AdminShowtimes({ movies, halls = [] }) {
       if (!s.time) return false;
       if (!s.time.startsWith(filterTime)) return false;
     }
+
+    if (filterDate && s.date !== filterDate) return false;
 
     return true;
   });
@@ -719,9 +724,10 @@ function AdminShowtimes({ movies, halls = [] }) {
         </select>
 
         <input className="admin-toolbar-time" type="time" value={filterTime} onChange={(e) => setFilterTime(e.target.value)} />
+        <input className="admin-toolbar-time" type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} aria-label="Filter by date" />
 
         <div style={{ display: 'flex', gap: 8 }}>
-          <button type="button" onClick={() => { setFilterMovie(''); setFilterStudio(''); setFilterTime(''); }}>
+          <button type="button" onClick={() => { setFilterMovie(''); setFilterStudio(''); setFilterTime(''); setFilterDate(''); }}>
             Clear
           </button>
           <button type="button" onClick={() => setIsAdding(true)}>
@@ -816,6 +822,7 @@ function AdminShowtimes({ movies, halls = [] }) {
         <p className="admin-muted">Loading showtimes...</p>
       ) : (
         <>
+          <p className="admin-muted">Showing {filteredShowtimes.length} of {showtimes.length} showtimes</p>
           {error ? <p className="admin-error">{error}</p> : null}
           <ShowtimeTable showtimes={filteredShowtimes} onEdit={startEditShowtime} onDelete={promptDeleteShowtime} />
         </>

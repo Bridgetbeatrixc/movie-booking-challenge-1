@@ -1,4 +1,6 @@
-export const sampleMovies = [
+import { getTrailerVideoIdByTitle } from "./movieTrailers.js";
+
+const legacyMovies = [
   {
     title: "The Twilight Saga: Breaking Dawn - Part 2",
     shortTitle: "Breaking Dawn - Part 2",
@@ -76,3 +78,34 @@ export const sampleMovies = [
     price: 35000
   }
 ];
+
+const currentMovieSeeds = [
+  ["Dune: Part Two", "Sci-Fi", "Adventure", 2024, 8.6], ["Inside Out 2", "Animation", "Family", 2024, 7.6],
+  ["Deadpool & Wolverine", "Action", "Comedy", 2024, 7.6], ["Twisters", "Action", "Thriller", 2024, 6.5],
+  ["The Wild Robot", "Animation", "Drama", 2024, 8.2], ["Wicked", "Fantasy", "Musical", 2024, 7.5],
+  ["Moana 2", "Animation", "Adventure", 2024, 6.9], ["Gladiator II", "Action", "Drama", 2024, 6.6],
+  ["Alien: Romulus", "Horror", "Sci-Fi", 2024, 7.1], ["Nosferatu", "Horror", "Fantasy", 2024, 7.2],
+  ["Smile 2", "Horror", "Thriller", 2024, 6.7], ["Furiosa: A Mad Max Saga", "Action", "Sci-Fi", 2024, 7.5],
+  ["A Complete Unknown", "Drama", "Music", 2024, 7.4], ["The Bikeriders", "Crime", "Drama", 2024, 6.8],
+  ["Challengers", "Romance", "Drama", 2024, 7.1]
+];
+
+function posterDataUrl(title) {
+  const safeTitle = title.replace(/[<>&]/g, "");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="900"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071b36"/><stop offset="1" stop-color="#4c1d95"/></linearGradient></defs><rect width="600" height="900" fill="url(#g)"/><circle cx="470" cy="170" r="150" fill="#60a5fa" opacity=".2"/><text x="45" y="720" fill="white" font-family="Arial" font-size="42" font-weight="700">${safeTitle}</text><text x="45" y="775" fill="#93c5fd" font-family="Arial" font-size="22">BEATRIX MOVIE</text></svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+const currentMovies = currentMovieSeeds.map(([title, genre, secondaryGenre, year, rating]) => {
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return {
+    title, shortTitle: title, slug,
+    poster: posterDataUrl(title),
+    trailerVideoId: getTrailerVideoIdByTitle(title),
+    description: `${title} is a recent Beatrix Movie release blending ${genre.toLowerCase()} and ${secondaryGenre.toLowerCase()} for a memorable cinema experience.`,
+    genres: [genre, secondaryGenre], runtime: "1h 45m", rating, year,
+    status: year === 2026 ? "advance-sale" : "showing", price: 35000
+  };
+});
+
+export const sampleMovies = [...legacyMovies, ...currentMovies];

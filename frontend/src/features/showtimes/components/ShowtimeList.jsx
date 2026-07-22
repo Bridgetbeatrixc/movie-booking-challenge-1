@@ -9,8 +9,35 @@ function groupShowtimes(showtimes) {
   }, {});
 }
 
-export function ShowtimeList({ error, loading, onRetry, onSelect, selectedShowtimeId, showtimes }) {
-  const groupedShowtimes = groupShowtimes(showtimes);
+function getUniqueSorted(values) {
+  return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+}
+
+export function ShowtimeList({
+  error,
+  loading,
+  onRetry,
+  onSelect,
+  onSelectDate,
+  onSelectStudio,
+  selectedDate,
+  selectedShowtimeId,
+  selectedStudio,
+  showtimes
+}) {
+  const dateOptions = getUniqueSorted(showtimes.map((showtime) => showtime.date));
+  const studioOptions = getUniqueSorted(
+    showtimes
+      .filter((showtime) => !selectedDate || showtime.date === selectedDate)
+      .map((showtime) => showtime.studio)
+  );
+  const filteredShowtimes = showtimes.filter((showtime) => {
+    const dateMatches = !selectedDate || showtime.date === selectedDate;
+    const studioMatches = !selectedStudio || showtime.studio === selectedStudio;
+
+    return dateMatches && studioMatches;
+  });
+  const groupedShowtimes = groupShowtimes(filteredShowtimes);
   const dates = Object.keys(groupedShowtimes).sort();
 
   return (
@@ -27,6 +54,41 @@ export function ShowtimeList({ error, loading, onRetry, onSelect, selectedShowti
         ) : null}
       </div>
 
+      {!loading && !error && showtimes.length ? (
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <label className="text-xs font-semibold text-slate-400">
+            Day
+            <select
+              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-400"
+              onChange={(event) => onSelectDate(event.target.value)}
+              value={selectedDate}
+            >
+              <option value="">All days</option>
+              {dateOptions.map((date) => (
+                <option key={date} value={date}>
+                  {formatShowDate(date)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs font-semibold text-slate-400">
+            Studio
+            <select
+              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-blue-400"
+              onChange={(event) => onSelectStudio(event.target.value)}
+              value={selectedStudio}
+            >
+              <option value="">All studios</option>
+              {studioOptions.map((studio) => (
+                <option key={studio} value={studio}>
+                  {studio}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      ) : null}
+
       {loading ? (
         <p className="mt-4 rounded-lg border border-slate-700 bg-slate-900/40 p-4 text-sm text-slate-300">
           Loading showtimes...
@@ -35,7 +97,7 @@ export function ShowtimeList({ error, loading, onRetry, onSelect, selectedShowti
         <p className="mt-4 rounded-lg border border-red-400/40 bg-red-950/40 p-4 text-sm text-red-100">{error}</p>
       ) : dates.length === 0 ? (
         <p className="mt-4 rounded-lg border border-slate-700 bg-slate-900/40 p-4 text-sm text-slate-400">
-          No showtime is available for this movie.
+          No showtime matches the selected day and studio.
         </p>
       ) : (
         <div className="mt-4 space-y-4">

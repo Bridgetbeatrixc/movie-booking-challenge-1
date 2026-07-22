@@ -1,0 +1,194 @@
+import { useEffect, useState } from "react";
+import { asset, defaultMovie } from "../../data/movies.js";
+import { fetchSeatAvailability, fetchShowtimesForMovie } from "../../services/showtimeApi.js";
+import { isPastShowtime } from "../../utils/formatters.js";
+import { BookingSummary } from "./BookingSummary.jsx";
+import { SeatGrid } from "./SeatGrid.jsx";
+import { ShowtimeList } from "./ShowtimeList.jsx";
+
+export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
+  const [showtimes, setShowtimes] = useState([]);
+  const [selectedShowtime, setSelectedShowtime] = useState(null);
+  const [seatAvailability, setSeatAvailability] = useState([]);
+  const [selectedSeats, setSelectedSeats] = useState([]);
+  const [showtimeError, setShowtimeError] = useState("");
+  const [seatError, setSeatError] = useState("");
+  const [showtimeLoading, setShowtimeLoading] = useState(false);
+  const [seatLoading, setSeatLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadShowtimes() {
+      setShowtimeLoading(true);
+      setShowtimeError("");
+      setSelectedShowtime(null);
+      setSeatAvailability([]);
+      setSelectedSeats([]);
+
+      try {
+        const nextShowtimes = await fetchShowtimesForMovie(selectedMovie);
+        const firstAvailable = nextShowtimes.find((showtime) => !isPastShowtime(showtime));
+
+        if (!cancelled) {
+          setShowtimes(nextShowtimes);
+          setSelectedShowtime(firstAvailable || null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setShowtimeError(error.message || "Showtime data failed to load.");
+          setShowtimes([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setShowtimeLoading(false);
+        }
+      }
+    }
+
+    loadShowtimes();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedMovie]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSeats() {
+      if (!selectedShowtime) {
+        setSeatAvailability([]);
+        return;
+      }
+
+      setSeatLoading(true);
+      setSeatError("");
+      setSelectedSeats([]);
+
+      try {
+        const seatData = await fetchSeatAvailability(selectedShowtime);
+
+        if (!cancelled) {
+          setSeatAvailability(seatData.availability || []);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setSeatError(error.message || "Seat data failed to load.");
+          setSeatAvailability([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setSeatLoading(false);
+        }
+      }
+    }
+
+    loadSeats();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedShowtime]);
+
+  function toggleSeat(seatId) {
+    setSelectedSeats((currentSeats) =>
+      currentSeats.includes(seatId) ? currentSeats.filter((seat) => seat !== seatId) : [...currentSeats, seatId]
+    );
+  }
+
+  function resetBooking() {
+    setSelectedSeats([]);
+    setSelectedMovie(defaultMovie);
+    localStorage.removeItem("selectedMovie");
+  }
+
+  function refreshShowtimes() {
+    setSelectedMovie({ ...selectedMovie });
+  }
+
+  function refreshSeats() {
+    setSelectedShowtime((currentShowtime) => (currentShowtime ? { ...currentShowtime } : currentShowtime));
+  }
+
+  function continueBooking() {
+    const seats = selectedSeats.join(", ");
+    alert(`Booking summary ready for ${selectedMovie.title}: ${seats}`);
+  }
+
+  return (
+    <div className="booking-page min-h-screen text-slate-100">
+      <Header />
+      <main className="mx-auto max-w-6xl px-6 pb-16">
+        <BookingHero movie={selectedMovie} />
+        <div className="mt-6">
+          <ShowtimeList
+            error={showtimeError}
+            loading={showtimeLoading}
+            onRetry={refreshShowtimes}
+            onSelect={setSelectedShowtime}
+            selectedShowtimeId={selectedShowtime?.id}
+            showtimes={showtimes}
+          />
+        </div>
+        <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
+          <SeatGrid
+            availability={seatAvailability}
+            error={seatError}
+            loading={seatLoading}
+            onRetry={refreshSeats}
+            onToggleSeat={toggleSeat}
+            selectedSeats={selectedSeats}
+            showtime={selectedShowtime}
+          />
+          <BookingSummary
+            movie={selectedMovie}
+            onContinue={continueBooking}
+            onReset={resetBooking}
+            selectedSeats={selectedSeats}
+            showtime={selectedShowtime}
+          />
+        </section>
+      </main>
+      <footer className="border-t border-slate-800 py-7 text-center text-xs text-slate-500">
+        Copyright 2026 Beatrix Movie - React booking demo
+      </footer>
+    </div>
+  );
+}
+
+function Header() {
+  return (
+    <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+      <a href="#">
+        <img src={asset("beatrix-logo.png")} alt="Beatrix Movie" className="h-9" />
+      </a>
+      <a href="#" className="text-sm text-slate-300 hover:text-white">
+        Back to movies
+      </a>
+    </header>
+  );
+}
+
+function BookingHero({ movie }) {
+  return (
+    <section className="relative overflow-hidden rounded-xl border border-blue-300/20 bg-[#06152d] p-6 shadow-2xl md:p-9">
+      <div className="absolute inset-0 bg-[url('/assets/cinema-hero-v2.png')] bg-cover bg-center opacity-20" />
+      <div className="relative grid items-center gap-6 md:grid-cols-[150px_1fr]">
+        <img src={movie.poster} alt={`${movie.title} poster`} className="h-48 w-36 rounded-lg object-cover shadow-xl" />
+        <div>
+          <p className="text-sm font-semibold tracking-[.25em] text-blue-300">NOW BOOKING</p>
+          <h1 className="mt-2 text-4xl font-semibold leading-tight">{movie.title}</h1>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
+            <span className="rounded bg-slate-800 px-3 py-1">{movie.genres}</span>
+            <span className="rounded bg-slate-800 px-3 py-1">{movie.runtime}</span>
+            <span className="rounded bg-slate-800 px-3 py-1">Rating {movie.rating}/10</span>
+          </div>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-slate-300">
+            Fresh seat availability for every session, from regular studios to the IMAX hall.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}

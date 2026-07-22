@@ -22,3 +22,8 @@ export const fetchCurrentUser = async () => {
   const response = await axios.get(`${API_URL}/me`);
   return response.data;
 };
+
+export const forgotPassword = async (email, newPassword) => {
+  const response = await axios.post(`${API_URL}/forgot-password`, { email, newPassword });
+  return response.data;
+};

@@ -86,6 +86,23 @@ export async function login(req, res, next) {
   }
 }
 
+export async function forgotPassword(req, res, next) {
+  try {
+    const { email, newPassword } = req.body;
+    if (!email || !newPassword || String(newPassword).length < 6) {
+      return res.status(400).json({ message: "Email and a new password of at least 6 characters are required." });
+    }
+    const user = await User.findOne({ email: String(email).toLowerCase() }).select("+passwordHash");
+    if (!user) return res.status(404).json({ message: "User account was not found." });
+    if (user.role === "admin") return res.status(403).json({ message: "Admin passwords must be changed through the admin process." });
+    user.passwordHash = newPassword;
+    await user.save();
+    res.json({ message: "Password reset successfully. You can now log in." });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export function logout(_req, res) {
   res.clearCookie("jwt", {
     httpOnly: true,

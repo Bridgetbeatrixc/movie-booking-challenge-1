@@ -1,0 +1,10 @@
+$kind: http-request
+name: Search/filter/paginate movies
+url: "{{baseUrl}}/api/movies?search=arrival&genre=Sci-Fi&page=1&limit=8"
+method: GET
+queryParams:
+  search: arrival
+  genre: Sci-Fi
+  page: "1"
+  limit: "8"
+order: 1000

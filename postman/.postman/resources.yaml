@@ -1,0 +1,11 @@
+# Use this workspace to collaborate
+workspace:
+  id: eb8bf804-0b0a-4383-8dc3-804243e37cbe
+
+localResources:
+  collections:
+    - ../Cinema-Booking-System.postman_collection.json
+
+cloudResources:
+  collections:
+    ../postman/collections/Cinema Booking System - Mandatory API Tests: 45566b05-33ee-4f92-93e6-866428b5d05c

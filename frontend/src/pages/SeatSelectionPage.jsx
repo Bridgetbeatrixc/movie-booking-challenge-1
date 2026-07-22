@@ -5,12 +5,23 @@ import { SeatGrid } from "../features/showtimes/components/SeatGrid.jsx";
 import { ShowtimeList } from "../features/showtimes/components/ShowtimeList.jsx";
 import { fetchSeatAvailability, fetchShowtimesForMovie } from "../features/showtimes/api/showtimeApi.js";
 import { checkoutBooking } from "../features/bookings/api/bookingApi.js";
-import { saveCheckout } from "../features/bookings/storage/checkoutStorage.js";
+import { clearCheckout, saveCheckout } from "../features/bookings/storage/checkoutStorage.js";
 import { isPastShowtime } from "../utils/formatters.js";
+
+function getAvailableShowtime(showtimes, selectedDate, selectedStudio) {
+  return showtimes.find((showtime) => {
+    const dateMatches = !selectedDate || showtime.date === selectedDate;
+    const studioMatches = !selectedStudio || showtime.studio === selectedStudio;
+
+    return dateMatches && studioMatches && !isPastShowtime(showtime);
+  });
+}
 
 export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
   const [showtimes, setShowtimes] = useState([]);
   const [selectedShowtime, setSelectedShowtime] = useState(null);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedStudio, setSelectedStudio] = useState("");
   const [seatAvailability, setSeatAvailability] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [showtimeError, setShowtimeError] = useState("");
@@ -27,6 +38,8 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
       setShowtimeLoading(true);
       setShowtimeError("");
       setSelectedShowtime(null);
+      setSelectedDate("");
+      setSelectedStudio("");
       setSeatAvailability([]);
       setSelectedSeats([]);
 
@@ -36,6 +49,8 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
 
         if (!cancelled) {
           setShowtimes(nextShowtimes);
+          setSelectedDate(firstAvailable?.date || nextShowtimes[0]?.date || "");
+          setSelectedStudio(firstAvailable?.studio || "");
           setSelectedShowtime(firstAvailable || null);
         }
       } catch (error) {
@@ -56,6 +71,31 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
       cancelled = true;
     };
   }, [selectedMovie]);
+
+  useEffect(() => {
+    if (!showtimes.length) {
+      return;
+    }
+
+    const studioStillExists = showtimes.some(
+      (showtime) => (!selectedDate || showtime.date === selectedDate) && showtime.studio === selectedStudio
+    );
+
+    if (selectedStudio && !studioStillExists) {
+      setSelectedStudio("");
+      return;
+    }
+
+    const currentShowtimeStillMatches =
+      selectedShowtime &&
+      (!selectedDate || selectedShowtime.date === selectedDate) &&
+      (!selectedStudio || selectedShowtime.studio === selectedStudio) &&
+      !isPastShowtime(selectedShowtime);
+
+    if (!currentShowtimeStillMatches) {
+      setSelectedShowtime(getAvailableShowtime(showtimes, selectedDate, selectedStudio) || null);
+    }
+  }, [selectedDate, selectedStudio, selectedShowtime, showtimes]);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,7 +142,17 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
   }
 
   function resetBooking() {
+    clearCheckout();
     setSelectedSeats([]);
+    setSelectedShowtime(null);
+    setSelectedDate("");
+    setSelectedStudio("");
+    setSeatAvailability([]);
+    setShowtimes([]);
+    setShowtimeError("");
+    setSeatError("");
+    setCheckoutError("");
+    setIsCheckingOut(false);
     setSelectedMovie(defaultMovie);
     localStorage.removeItem("selectedMovie");
   }
@@ -158,7 +208,11 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
             loading={showtimeLoading}
             onRetry={refreshShowtimes}
             onSelect={setSelectedShowtime}
+            onSelectDate={setSelectedDate}
+            onSelectStudio={setSelectedStudio}
+            selectedDate={selectedDate}
             selectedShowtimeId={selectedShowtime?.id}
+            selectedStudio={selectedStudio}
             showtimes={showtimes}
           />
         </div>
