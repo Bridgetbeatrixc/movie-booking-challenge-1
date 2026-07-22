@@ -83,7 +83,7 @@ function Hero() {
       />
       <div className="hero-overlay absolute inset-0" />
       <div className="hero-content relative z-10 mx-auto max-w-2xl">
-        <p className="text-sm font-semibold tracking-[.35em] text-blue-200">BEATRIX MOVIE</p>
+        <p className="text-sm font-semibold tracking-[.35em] text-blue-200">BEATRIX MOVIE by Jenkins</p>
         <h1 className="mt-5 text-4xl font-light sm:text-6xl">
           Feel The
           <br />
