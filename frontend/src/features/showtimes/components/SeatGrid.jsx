@@ -1,7 +1,76 @@
+import { useEffect, useRef } from "react";
 import { SeatLegend } from "./SeatLegend.jsx";
 
-export function SeatGrid({ availability, error, loading, onRetry, onToggleSeat, selectedSeats, showtime }) {
+export function SeatGrid({
+  availability,
+  error,
+  loading,
+  onRetry,
+  onSetSeatSelection,
+  onToggleSeat,
+  selectedSeats,
+  showtime
+}) {
+  const dragStateRef = useRef({ active: false, shouldSelect: true, touchedSeats: new Set() });
+  const selectedSeatsRef = useRef(new Set(selectedSeats));
   const hasSeats = availability?.length > 0;
+
+  useEffect(() => {
+    selectedSeatsRef.current = new Set(selectedSeats);
+  }, [selectedSeats]);
+
+  function applySeat(seatId, shouldSelect) {
+    const dragState = dragStateRef.current;
+
+    if (dragState.touchedSeats.has(seatId)) {
+      return;
+    }
+
+    dragState.touchedSeats.add(seatId);
+
+    const nextSelectedSeats = new Set(selectedSeatsRef.current);
+    if (shouldSelect) {
+      nextSelectedSeats.add(seatId);
+    } else {
+      nextSelectedSeats.delete(seatId);
+    }
+
+    selectedSeatsRef.current = nextSelectedSeats;
+    onSetSeatSelection(seatId, shouldSelect);
+  }
+
+  function startSeatDrag(seat, booked, event) {
+    if (booked) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const shouldSelect = !selectedSeatsRef.current.has(seat.id);
+    dragStateRef.current = { active: true, shouldSelect, touchedSeats: new Set() };
+    applySeat(seat.id, shouldSelect);
+  }
+
+  function continueSeatDrag(seat, booked) {
+    const dragState = dragStateRef.current;
+
+    if (!dragState.active || booked) {
+      return;
+    }
+
+    applySeat(seat.id, dragState.shouldSelect);
+  }
+
+  function endSeatDrag() {
+    dragStateRef.current.active = false;
+    dragStateRef.current.touchedSeats.clear();
+  }
+
+  function handleKeyboardToggle(seatId, event) {
+    if (event.detail === 0) {
+      onToggleSeat(seatId);
+    }
+  }
 
   return (
     <section className="rounded-xl border border-slate-700 bg-[#06152d] p-5 sm:p-8">
@@ -37,7 +106,7 @@ export function SeatGrid({ availability, error, loading, onRetry, onToggleSeat, 
           <div className="rounded-[50%] border-t-4 border-blue-300/80 pt-3 text-center text-xs font-semibold tracking-[.45em] text-blue-100">
             SCREEN
           </div>
-          <div className="mt-8 space-y-3">
+          <div className="mt-8 space-y-3 select-none" onPointerCancel={endSeatDrag} onPointerUp={endSeatDrag}>
             {availability.map((row) => (
               <div className="grid grid-cols-[24px_repeat(8,minmax(28px,1fr))] items-center gap-2" key={row.row}>
                 <span className="text-center text-sm text-slate-400">{row.row}</span>
@@ -53,7 +122,11 @@ export function SeatGrid({ availability, error, loading, onRetry, onToggleSeat, 
                       } ${selected ? "selected" : ""}`}
                       disabled={booked}
                       key={seat.id}
-                      onClick={() => onToggleSeat(seat.id)}
+                      onClick={(event) => handleKeyboardToggle(seat.id, event)}
+                      onPointerCancel={endSeatDrag}
+                      onPointerDown={(event) => startSeatDrag(seat, booked, event)}
+                      onPointerEnter={() => continueSeatDrag(seat, booked)}
+                      onPointerUp={endSeatDrag}
                       title={booked ? `${seat.id} is already booked` : seat.id}
                       type="button"
                     >

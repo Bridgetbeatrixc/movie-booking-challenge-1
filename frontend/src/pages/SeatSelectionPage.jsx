@@ -146,6 +146,22 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
     );
   }
 
+  function setSeatSelection(seatId, shouldSelect) {
+    setSelectedSeats((currentSeats) => {
+      const alreadySelected = currentSeats.includes(seatId);
+
+      if (shouldSelect && !alreadySelected) {
+        return [...currentSeats, seatId];
+      }
+
+      if (!shouldSelect && alreadySelected) {
+        return currentSeats.filter((seat) => seat !== seatId);
+      }
+
+      return currentSeats;
+    });
+  }
+
   function resetBooking() {
     setSelectedSeats([]);
     setCheckoutError("");
@@ -224,6 +240,7 @@ export function SeatSelectionPage({ selectedMovie, setSelectedMovie }) {
             error={seatError}
             loading={seatLoading}
             onRetry={refreshSeats}
+            onSetSeatSelection={setSeatSelection}
             onToggleSeat={toggleSeat}
             selectedSeats={selectedSeats}
             showtime={selectedShowtime}

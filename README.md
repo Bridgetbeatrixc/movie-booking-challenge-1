@@ -124,6 +124,11 @@ See [REQUIREMENTS_AUDIT.md](REQUIREMENTS_AUDIT.md) for the implemented requireme
 Frontend default: `http://localhost:5173`
 Backend default: `http://localhost:5000`
 
+Docker demo URL: `http://localhost:8081`
+Docker backend host URL: `http://localhost:5001`
+
+For Docker, Jenkins, and ngrok setup, see [docs/DOCKER_JENKINS_NGROK_GUIDE.md](docs/DOCKER_JENKINS_NGROK_GUIDE.md).
+
 ## Team Documentation
 
 - `FEATURE_OWNERS.md` explains who owns each feature, the scope, and the main files.

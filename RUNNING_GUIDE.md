@@ -95,3 +95,18 @@ Movie and showtime data are loaded from the backend API. Run `npm run seed` in t
 - Update `FEATURE_OWNERS.md` and `API_CONTRACT.md` when your scope changes.
 - Run `npm run build` in `frontend` before pushing frontend changes.
 - Run a backend syntax or smoke check before pushing backend changes.
+
+## 8. Docker, Jenkins, and Ngrok
+
+This project also includes Docker, Jenkins, and ngrok setup files for demo and CI/CD workflow:
+
+- `docker-compose.yml`
+- `backend/Dockerfile`
+- `frontend/Dockerfile`
+- `frontend/nginx.conf`
+- `Jenkinsfile`
+
+See `docs/DOCKER_JENKINS_NGROK_GUIDE.md` for the detailed setup steps.
+
+Docker frontend default: `http://localhost:8081`
+Docker backend host default: `http://localhost:5001`
